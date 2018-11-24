@@ -21,6 +21,47 @@ namespace EPIAS {
                 insane_mode = true
             };
 
+
+            /**
+             * List Meters whose supplier has changed
+             **/
+            try {
+                List<ChangedSupplierMeter> response = epias.getChangedSupplierMeters( new DateTime( 2018, 11, 1 ), "EXACT_LIST" );
+
+                using( StreamWriter sw = new StreamWriter( "ChangedSupplierMeter_" + DateTime.Now.ToString( "yyyyMMdd_HHmm" ) + ".txt" ) ) {
+                    foreach( ChangedSupplierMeter item in response ) {
+                        sw.Write( item.newMeterId + "," );
+                        sw.Write( item.newMeterEic + "," );
+                        sw.Write( item.newOrganizationEic + "," );
+                        sw.Write( item.oldOrganizationEic + "," );
+                        sw.Write( item.newCustomerNo + "," );
+                        sw.Write( item.newMeterName + "," );
+                        sw.Write( item.newMeterAddress + "," );
+                        sw.Write( item.newMeterCountyId + "," );
+                        sw.Write( item.newMeterReadingType + "," );
+                        sw.Write( item.newMeterReadingTypeEnum + "," );
+                        sw.Write( item.newProfileSubscriptionGroup + "," );
+                        sw.Write( item.newAverageAnnualConsumption + "," );
+                        sw.Write( item.newDistributionMeterCode + "," );
+                        sw.Write( item.newprofileSubscriptionGroupName + "," );
+                        sw.Write( item.newCity + "," );
+                        sw.Write( item.oldOrganizationCode + "," );
+                        sw.Write( item.newOrganizationCode );
+                        sw.WriteLine( "" );
+                    }
+                }
+            } catch( EXISTException ex ) {
+                Console.WriteLine( ex.error.resultCode );
+                Console.WriteLine( ex.error.resultDescription );
+                Console.WriteLine( ex.error.resultType );
+            //} catch( Exception ex ) {
+            //    Console.WriteLine( ex.Message );
+            }
+            
+            /**
+             * Service to control meter is read or not and Listing past meters
+             **/
+            /*
             List<MeterDatas> response = epias.getMeterDataConfiguration( new DateTime(2018,11,1) );
 
             using( StreamWriter sw = new StreamWriter( "MeterDataConfiguration_" + DateTime.Now.ToString("yyyyMMdd_HHmm") + ".txt" ) ) {
@@ -42,10 +83,10 @@ namespace EPIAS {
                     sw.Write( item.isConfSupplySettlement + "," );
                     sw.Write( item.isConfWithdDeducSettlement + "," );
                     sw.Write( item.isConfSupplyDeducSettlement + "," );
-                    sw.Write( item.isRead + "," );
+                    sw.Write( item.isRead );
                     sw.WriteLine( "" );
                 }
-            }
+            }*/
 
             Console.ReadLine();
         }
