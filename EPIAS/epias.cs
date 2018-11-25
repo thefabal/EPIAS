@@ -17,101 +17,23 @@ namespace EPIAS {
         public string user_name { get; set; } = string.Empty;
         public string user_pass { get; set; } = string.Empty;
 
-        private readonly string tgt_url = "https://cas.epias.com.tr/cas/v1/tickets?format=text";
-        private readonly string tys_url = "https://tys.epias.com.tr";
-        private readonly string mdc_url = "ecms-consumption-metering-point/rest/metering/data/total/list-meter-data-configuration?format=json";
-        private readonly string csm_url = "ecms-consumption-metering-point/rest/cmp/list-changed-supplier-meters?format=json";
+        private readonly string url_tgt = "https://cas.epias.com.tr/cas/v1/tickets?format=text";
+        private readonly string url_tys = "https://tys.epias.com.tr";
+        private readonly string url_mdc = "ecms-consumption-metering-point/rest/metering/data/total/list-meter-data-configuration?format=json";
+        private readonly string url_csm = "ecms-consumption-metering-point/rest/cmp/list-changed-supplier-meters?format=json";
+        private readonly string url_ddm = "ecms-consumption-metering-point/rest/cmp/list-deducted-meters?format=json";
+        private readonly string url_mcr = "ecms-consumption-metering-point/rest/cmp/list-meter-count?format=json";
 
         private string tgt = string.Empty;
         private string st = string.Empty;
         private static Stopwatch swTGT = new Stopwatch();
 
         /**
-         * Service to control meter is read or not and Listing past meters 
-         **/
-        public List<MeterDatas> getMeterDataConfiguration( DateTime term, bool version = false ) {
-            List<MeterDatas> meterDatas = new List<MeterDatas>();
-            responseMeteringDataConfiguration partial;
-
-            /**
-             * get number of total record.
-             **/
-            while( true ) {
-                try {
-                    partial = getMeterDataConfiguration( term, 0, 1, version );
-
-                    break;
-                } catch( EXISTException ex ) {
-                    throw ex;
-                } catch( Exception ex ) {
-                    if( insane_mode == false || ex.Message != "The operation has timed out" ) {
-                        throw new Exception( "error on getting meter data configuration" );
-                    }
-                }
-            }
-
-            /**
-             * get all records.
-             **/
-            int num_of_record = partial.body.queryInformation.count;
-            for(int i = 0; i < num_of_record; i += count_perrun ) {
-                while(true) {
-                    try {
-                        meterDatas = meterDatas.Concat( getMeterDataConfiguration( term, i, Math.Min( i + count_perrun - 1, num_of_record ), version ).body.meterDatas ).ToList();
-
-                        break;
-                    } catch(Exception ex) {
-                        if( insane_mode == false || ex.Message != "The operation has timed out" ) {
-                            throw new Exception( "error on getting meter data configuration" );
-                        }
-                    }
-                }
-            }
-
-            return meterDatas;
-        }
-
-        private responseMeteringDataConfiguration getMeterDataConfiguration( DateTime term, int range_begin, int range_end, bool pastVersion ) {
-            if( getST() == false ) {
-                return new responseMeteringDataConfiguration();
-            }
-
-            string request = (new requestMeterDataConfiguration() {
-                header = new List<Header> {
-                    new Header("transactionId", Guid.NewGuid().ToString()),
-                    new Header("application", "proGEDIA EXIST")
-                },
-                body = new mdcBody() {
-                    term = term,
-                    pastVersion = pastVersion,
-                    meteringReadingType = "null",
-                    range = new Range() {
-                        begin = range_begin,
-                        end = range_end
-                    }
-                }
-            }).ToString();
-
-            string response = postData( request, tys_url + "/" + mdc_url );
-            if( response.Length != 0 ) {
-                if( response.IndexOf( "SECURITYERROR" ) != -1 ) {
-                    throw new EXISTException( "" ) {
-                        error = new JavaScriptSerializer().Deserialize<responseError>( response )
-                    };
-                } else {
-                    return new JavaScriptSerializer().Deserialize<responseMeteringDataConfiguration>( response );
-                }
-            } else {
-                return new responseMeteringDataConfiguration();
-            }
-        }
-
-        /**
          * List Meters whose supplier has changed
          **/
-        public List<ChangedSupplierMeter> getChangedSupplierMeters( DateTime term, string listType ) {
-            List<ChangedSupplierMeter> changedSupplierMeterListResponse = new List<ChangedSupplierMeter>();
-            responseChangedSupplierMeters partial;
+        public List<ChangedSupplierMeterResponse> getChangedSupplierMeters( DateTime term, string listType ) {
+            List<ChangedSupplierMeterResponse> response = new List<ChangedSupplierMeterResponse>();
+            ChangedSupplierMeterServiceResponse partial;
 
             /**
              * get number of total record.
@@ -137,7 +59,7 @@ namespace EPIAS {
             for( int i = 0; i < num_of_record; i += count_perrun ) {
                 while( true ) {
                     try {
-                        changedSupplierMeterListResponse = changedSupplierMeterListResponse.Concat( getChangedSupplierMeters( term, i, Math.Min( i + count_perrun - 1, num_of_record ), listType ).body.changedSupplierMeterListResponse ).ToList();
+                        response = response.Concat( getChangedSupplierMeters( term, i, Math.Min( i + count_perrun - 1, num_of_record ), listType ).body.changedSupplierMeterListResponse ).ToList();
 
                         break;
                     } catch( Exception ex ) {
@@ -148,16 +70,16 @@ namespace EPIAS {
                 }
             }
 
-            return changedSupplierMeterListResponse;
+            return response;
         }
 
-        private responseChangedSupplierMeters getChangedSupplierMeters( DateTime term, int range_begin, int range_end, string listType ) {
-            string request = ( new requestChangedSupplierMeters() {
+        private ChangedSupplierMeterServiceResponse getChangedSupplierMeters( DateTime term, int range_begin, int range_end, string listType ) {
+            string request = ( new GetChangedSupplierMetersRequest() {
                 header = new List<Header> {
                     new Header("transactionId", Guid.NewGuid().ToString()),
                     new Header("application", "proGEDIA EXIST")
                 },
-                body = new csmBody() {
+                body = new ListChangedSupplierMeters() {
                     term = term,
                     listType = listType,
                     range = new Range() {
@@ -167,21 +89,215 @@ namespace EPIAS {
                 }
             } ).ToString();
 
-            string response = postData( request, tys_url + "/" + csm_url );
+            string response = postRequest( request, url_tys + "/" + url_csm );
             if( response.Length != 0 ) {
                 if( response.IndexOf( "SECURITYERROR" ) != -1 ) {
                     throw new EXISTException( "" ) {
                         error = new JavaScriptSerializer().Deserialize<responseError>( response )
                     };
                 } else {
-                    return new JavaScriptSerializer().Deserialize<responseChangedSupplierMeters>( response );
+                    return new JavaScriptSerializer().Deserialize<ChangedSupplierMeterServiceResponse>( response );
                 }
             } else {
-                return new responseChangedSupplierMeters();
+                return new ChangedSupplierMeterServiceResponse();
             }
         }
 
-        public string postData( string request, string url ) {
+        /**
+         * List Deducted Meters Service
+         **/
+        public List<DeductedMeterResponse> GetDeductedMetersRequest( DateTime term ) {
+            List<DeductedMeterResponse> response = new List<DeductedMeterResponse>();
+            DeductedMeterServiceResponse partial;
+
+            /**
+             * get number of total record.
+             **/
+            while( true ) {
+                try {
+                    partial = GetDeductedMetersRequest( term, 0, 1 );
+
+                    break;
+                } catch( EXISTException ex ) {
+                    throw ex;
+                } catch( Exception ex ) {
+                    if( insane_mode == false || ex.Message != "The operation has timed out" ) {
+                        throw new Exception( "error on getting meter data configuration" );
+                    }
+                }
+            }
+
+            /**
+             * get all records.
+             **/
+            int num_of_record = partial.body.queryInformation.count;
+            for( int i = 0; i < num_of_record; i += count_perrun ) {
+                while( true ) {
+                    try {
+                        response = response.Concat( GetDeductedMetersRequest( term, i, Math.Min( i + count_perrun - 1, num_of_record ) ).body.deductedMeterListResponse ).ToList();
+
+                        break;
+                    } catch( Exception ex ) {
+                        if( insane_mode == false || ex.Message != "The operation has timed out" ) {
+                            throw new Exception( "error on getting meter data configuration" );
+                        }
+                    }
+                }
+            }
+
+            return response;
+        }
+
+        private DeductedMeterServiceResponse GetDeductedMetersRequest( DateTime term, int range_begin, int range_end ) {
+            string request = ( new GetDeductedMetersRequest() {
+                header = new List<Header> {
+                    new Header("transactionId", Guid.NewGuid().ToString()),
+                    new Header("application", "proGEDIA EXIST")
+                },
+                body = new ListDeductedMetersRequest() {
+                    term = term,
+                    range = new Range() {
+                        begin = range_begin,
+                        end = range_end
+                    }
+                }
+            } ).ToString();
+
+            string response = postRequest( request, url_tys + "/" + url_ddm );
+            if( response.Length != 0 ) {
+                if( response.IndexOf( "body" ) == -1 ) {
+                    throw new EXISTException( "" ) {
+                        error = new JavaScriptSerializer().Deserialize<responseError>( response )
+                    };
+                } else {
+                    return new JavaScriptSerializer().Deserialize<DeductedMeterServiceResponse>( response );
+                }
+            } else {
+                return new DeductedMeterServiceResponse();
+            }
+        }
+
+        /**
+         * List Meter Counts
+         **/
+
+        public List<ReturnedToSupplierMeterResponse> GetMeterCountRequest( DateTime term, string countType ) {
+            string request = ( new GetMeterCountRequest() {
+                header = new List<Header> {
+                    new Header("transactionId", Guid.NewGuid().ToString()),
+                    new Header("application", "proGEDIA EXIST")
+                },
+                body = new ListMeterCountRequest() {
+                    term = term,
+                    countType = countType
+                }
+            } ).ToString();
+
+            while( true ) {
+                try {
+                    string response = postRequest( request, url_tys + "/" + url_mcr );
+                    if( response.Length != 0 ) {
+                        if( response.IndexOf( "body" ) == -1 ) {
+                            throw new EXISTException( "" ) {
+                                error = new JavaScriptSerializer().Deserialize<responseError>( response )
+                            };
+                        } else {
+                            return ( new JavaScriptSerializer().Deserialize<MeterCountServiceResponse>( response ) ).body.meterCountResponseList;
+                        }
+                    } else {
+                        return new List<ReturnedToSupplierMeterResponse>();
+                    }
+                } catch( EXISTException ex) {
+                    throw ex;
+                } catch( Exception ex ) {
+                    if( insane_mode == false || ex.Message != "The operation has timed out" ) {
+                        throw new Exception( "error on getting meter data configuration" );
+                    }
+                }
+            }
+        }
+
+        /**
+         * Service to control meter is read or not and Listing past meters 
+         **/
+        public List<MeterDatas> getMeterDataConfiguration( DateTime term, bool version = false ) {
+            List<MeterDatas> response = new List<MeterDatas>();
+            MeteringDataAndConfigurationQueryResponse partial;
+
+            /**
+             * get number of total record.
+             **/
+            while( true ) {
+                try {
+                    partial = getMeterDataConfiguration( term, 0, 1, version );
+
+                    break;
+                } catch( EXISTException ex ) {
+                    throw ex;
+                } catch( Exception ex ) {
+                    if( insane_mode == false || ex.Message != "The operation has timed out" ) {
+                        throw new Exception( "error on getting meter data configuration" );
+                    }
+                }
+            }
+
+            /**
+             * get all records.
+             **/
+            int num_of_record = partial.body.queryInformation.count;
+            for( int i = 0; i < num_of_record; i += count_perrun ) {
+                while( true ) {
+                    try {
+                        response = response.Concat( getMeterDataConfiguration( term, i, Math.Min( i + count_perrun - 1, num_of_record ), version ).body.meterDatas ).ToList();
+
+                        break;
+                    } catch( Exception ex ) {
+                        if( insane_mode == false || ex.Message != "The operation has timed out" ) {
+                            throw new Exception( "error on getting meter data configuration" );
+                        }
+                    }
+                }
+            }
+
+            return response;
+        }
+
+        private MeteringDataAndConfigurationQueryResponse getMeterDataConfiguration( DateTime term, int range_begin, int range_end, bool pastVersion ) {
+            if( getST() == false ) {
+                return new MeteringDataAndConfigurationQueryResponse();
+            }
+
+            string request = ( new MeteringDataConfigurationQueryRequest() {
+                header = new List<Header> {
+                    new Header("transactionId", Guid.NewGuid().ToString()),
+                    new Header("application", "proGEDIA EXIST")
+                },
+                body = new MeteringDataConfigurationQuery() {
+                    term = term,
+                    pastVersion = pastVersion,
+                    meteringReadingType = "null",
+                    range = new Range() {
+                        begin = range_begin,
+                        end = range_end
+                    }
+                }
+            } ).ToString();
+
+            string response = postRequest( request, url_tys + "/" + url_mdc );
+            if( response.Length != 0 ) {
+                if( response.IndexOf( "SECURITYERROR" ) != -1 ) {
+                    throw new EXISTException( "" ) {
+                        error = new JavaScriptSerializer().Deserialize<responseError>( response )
+                    };
+                } else {
+                    return new JavaScriptSerializer().Deserialize<MeteringDataAndConfigurationQueryResponse>( response );
+                }
+            } else {
+                return new MeteringDataAndConfigurationQueryResponse();
+            }
+        }
+
+        private string postRequest( string request, string url ) {
             if( getST() == false ) {
                 return string.Empty;
             }
@@ -219,7 +335,7 @@ namespace EPIAS {
                 return false;
             }
 
-            string request = "service=" + tys_url;
+            string request = "service=" + url_tys;
             HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create( tgt + "?format=text" );
 
             httpWebRequest.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
@@ -259,13 +375,13 @@ namespace EPIAS {
             }
 
             string request = "username=" + user_name + "&password=" + user_pass;
-            HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create( tgt_url );
+            HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create( url_tgt );
 
             httpWebRequest.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
             httpWebRequest.CachePolicy = new HttpRequestCachePolicy( HttpRequestCacheLevel.NoCacheNoStore );
             httpWebRequest.ContentType = "application/x-www-form-urlencoded";
             httpWebRequest.ContentLength = request.Length;
-            httpWebRequest.Host = (new Uri( tgt_url ) ).Host;
+            httpWebRequest.Host = (new Uri( url_tgt ) ).Host;
             httpWebRequest.KeepAlive = true;
             httpWebRequest.Method = "POST";
             httpWebRequest.Headers.Add( "Charset", "UTF-8" );
@@ -289,8 +405,18 @@ namespace EPIAS {
 
                     return true;
                 }
-            } catch {
-                throw new Exception( "Error on getting TGT" );
+            } catch(Exception ex) {
+                if( ex.Message.IndexOf( "Bad Request" ) != -1 ) {
+                    throw new EXISTException() {
+                        error = new responseError() {
+                            resultCode = "BADREQUEST",
+                            resultDescription = "Username or password are wrong.",
+                            resultType = "SECURITYERROR"
+                        }
+                    };
+                } else {
+                    throw new Exception( "Error on getting TGT" );
+                }
             }
         }
     }
@@ -298,16 +424,19 @@ namespace EPIAS {
 
     /**
      * list-changed-supplier-meters
+     **/
+
+    /**
      * response
      **/
-    public class responseChangedSupplierMeters {
+    public class ChangedSupplierMeterServiceResponse {
         public string resultCode { get; set; }
         public string resultDescription { get; set; }
         public string resultType { get; set; }
-        public rcsmBody body { get; set; }
+        public ChangedSupplierMeterListResponse body { get; set; }
     }
 
-    public class ChangedSupplierMeter {
+    public class ChangedSupplierMeterResponse {
         public int newMeterId { get; set; }
         public string newMeterEic { get; set; }
         public string newOrganizationEic { get; set; }
@@ -327,25 +456,24 @@ namespace EPIAS {
         public string newOrganizationCode { get; set; }
     }
 
-    public class rcsmBody {
+    public class ChangedSupplierMeterListResponse {
         public QueryInformation queryInformation { get; set; }
-        public List<ChangedSupplierMeter> changedSupplierMeterListResponse { get; set; }
+        public List<ChangedSupplierMeterResponse> changedSupplierMeterListResponse { get; set; }
     }
 
     /**
-     * list-changed-supplier-meters
      * request
      **/
-    public class requestChangedSupplierMeters {
+    public class GetChangedSupplierMetersRequest {
         public List<Header> header { get; set; }
-        public csmBody body { get; set; }
+        public ListChangedSupplierMeters body { get; set; }
 
         public override string ToString( ) {
             return "{\"header\":[" + string.Join<Header>( ",", header.ToArray() ) + "],\"body\":" + body.ToString() + "}";
         }
     }
 
-    public class csmBody {
+    public class ListChangedSupplierMeters {
         public DateTime term { get; set; }
         public string listType { get; set; }
         public Range range { get; set; }
@@ -356,25 +484,121 @@ namespace EPIAS {
     }
 
     /**
-     * list-meter-data-configuration
+     * list-deducted-meters
+     **/
+
+    /**
      * response
      **/
-    public class responseMeteringDataConfiguration {
+    public class DeductedMeterResponse {
+        public int meterId { get; set; }
+        public DateTime meterEffectiveDate { get; set; }
+        public string meterEic { get; set; }
+        public string city { get; set; }
+        public object meterSerialNo { get; set; }
+        public int customerNo { get; set; }
+        public string meterName { get; set; }
+        public int settlementPointId { get; set; }
+        public string settlementPointName { get; set; }
+    }
+
+    public class DeductedMeterListResponse {
+        public QueryInformation queryInformation { get; set; }
+        public List<DeductedMeterResponse> deductedMeterListResponse { get; set; }
+    }
+
+    public class DeductedMeterServiceResponse {
         public string resultCode { get; set; }
         public string resultDescription { get; set; }
         public string resultType { get; set; }
-        public rmdcBody body { get; set; }
+        public DeductedMeterListResponse body { get; set; }
     }
 
-    public class rmdcBody {
+    /**
+     * request
+     **/
+    public class GetDeductedMetersRequest {
+        public List<Header> header { get; set; }
+        public ListDeductedMetersRequest body { get; set; }
+
+        public override string ToString( ) {
+            return "{\"header\":[" + string.Join<Header>( ",", header.ToArray() ) + "],\"body\":" + body.ToString() + "}";
+        }
+    }
+
+    public class ListDeductedMetersRequest {
+        public DateTime term { get; set; }
+        public Range range { get; set; }
+
+        public override string ToString( ) {
+            return "{\"term\":\"" + proGEDIA.ToString( term ) + "\",\"range\":" + range.ToString() + "}";
+        }
+    }
+
+    /**
+     * list-meter-count
+     **/
+
+    /*
+     * request
+     **/
+
+    public class ReturnedToSupplierMeterResponse {
+        public object meterEffectiveDate { get; set; }
+        public string readingType { get; set; }
+        public int meterCount { get; set; }
+    }
+
+    public class ResponseBody {
+        public List<ReturnedToSupplierMeterResponse> meterCountResponseList { get; set; }
+    }
+
+    public class MeterCountServiceResponse {
+        public string resultCode { get; set; }
+        public string resultDescription { get; set; }
+        public string resultType { get; set; }
+        public ResponseBody body { get; set; }
+    }
+
+    /*
+     * response
+     **/
+
+    public class ListMeterCountRequest {
+        public DateTime term { get; set; }
+        public string countType { get; set; }
+
+        public override string ToString( ) {
+            return "{\"term\":\"" + proGEDIA.ToString( term ) + "\",\"countType\":\"" + countType + "\"}";
+        }
+    }
+
+    public class GetMeterCountRequest {
+        public List<Header> header { get; set; }
+        public ListMeterCountRequest body { get; set; }
+
+        public override string ToString( ) {
+            return "{\"header\":[" + string.Join<Header>( ",", header.ToArray() ) + "],\"body\":" + body.ToString() + "}";
+        }
+    }
+
+    /**
+     * list-meter-data-configuration
+     **/
+
+    /**
+     * response
+     **/
+    public class MeteringDataAndConfigurationQueryResponse {
+        public string resultCode { get; set; }
+        public string resultDescription { get; set; }
+        public string resultType { get; set; }
+        public MeteringDataAndConfigurationList body { get; set; }
+    }
+
+    public class MeteringDataAndConfigurationList {
         public QueryInformation queryInformation { get; set; }
         public List<MeterDatas> meterDatas { get; set; }
-    }
-
-    public class QueryInformation {
-        public int begin { get; set; }
-        public int end { get; set; }
-        public int count { get; set; }
     }
 
     public class MeterDatas {
@@ -399,19 +623,18 @@ namespace EPIAS {
     }   
 
     /**
-     * list-meter-data-configuration
      * request
      **/
-    public class requestMeterDataConfiguration {
+    public class MeteringDataConfigurationQueryRequest {
         public List<Header> header;
-        public mdcBody body;
+        public MeteringDataConfigurationQuery body;
 
         public override string ToString( ) {
             return "{\"header\":[" + string.Join<Header>( ",", header.ToArray() ) + "],\"body\":" + body.ToString() + "}";
         }
     }
 
-    public class mdcBody {
+    public class MeteringDataConfigurationQuery {
         private string _meteringReadingType;
 
         public DateTime term;
@@ -430,10 +653,10 @@ namespace EPIAS {
     /**
      * Common classes
      **/
-    public class responseError {
-        public string resultCode { get; set; }
-        public string resultDescription { get; set; }
-        public string resultType { get; set; }
+    public class QueryInformation {
+        public int begin { get; set; }
+        public int end { get; set; }
+        public int count { get; set; }
     }
 
     public class Header {
@@ -459,6 +682,24 @@ namespace EPIAS {
         }
     }
 
+    public class responseError {
+        public string resultCode { get; set; }
+        public string resultDescription { get; set; }
+        public string resultType { get; set; }
+    }
+
+    public class EXISTException : Exception {
+        public responseError error = new responseError();
+
+        public EXISTException( ) : base() {
+
+        }
+
+        public EXISTException( string message ) : base( message ) {
+
+        }
+    }
+
     public static class proGEDIA {
         public static string ToString( DateTime dt ) {
             if( dt >= new DateTime( 2016, 10, 1, 0, 0, 0 ) || ( dt.Year == 2015 && dt.Month == 11 ) ) {
@@ -468,14 +709,6 @@ namespace EPIAS {
             } else {
                 return dt.ToString( "yyyy-MM-dd\\T00:00:00.000" ) + "+0300";
             }
-        }
-    }
-
-    public class EXISTException : Exception {
-        public responseError error = new responseError();
-
-        public EXISTException( string message ) : base( message ) {
-
         }
     }
 }
