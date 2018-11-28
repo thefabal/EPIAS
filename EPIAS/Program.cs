@@ -98,14 +98,47 @@ namespace EPIAS {
             /**
              * List Meter Counts
              **/
+            //try {
+            //    List<ReturnedToSupplierMeterResponse> response = epias.GetMeterCountRequest( new DateTime( 2018, 11, 1 ), "PORTFOLIO" );
+
+            //    using( StreamWriter sw = new StreamWriter( "GetMeterCountRequest_" + DateTime.Now.ToString( "yyyyMMdd_HHmm" ) + ".txt" ) ) {
+            //        foreach( ReturnedToSupplierMeterResponse item in response ) {
+            //            sw.Write( item.meterEffectiveDate + "," );
+            //            sw.Write( item.readingType + "," );
+            //            sw.Write( item.meterCount );
+            //            sw.WriteLine( "" );
+            //        }
+            //    }
+            //} catch( EXISTException ex ) {
+            //    Console.WriteLine( ex.error.resultCode );
+            //    Console.WriteLine( ex.error.resultDescription );
+            //    Console.WriteLine( ex.error.resultType );
+            //} catch( Exception ex ) {
+            //    Console.WriteLine( ex.Message );
+            //}
+
+            /**
+             * List Meter Counts
+             **/
             try {
-                List<ReturnedToSupplierMeterResponse> response = epias.GetMeterCountRequest( new DateTime( 2018, 11, 1 ), "PORTFOLIO" );
+                List<MeteringPointEICQueryResponseData> response = epias.MeteringPointEICQueryRequest( new List<MeteringPointEICQuery>() { new MeteringPointEICQuery() { meterEic = "" } } );
 
                 using( StreamWriter sw = new StreamWriter( "GetMeterCountRequest_" + DateTime.Now.ToString( "yyyyMMdd_HHmm" ) + ".txt" ) ) {
-                    foreach( ReturnedToSupplierMeterResponse item in response ) {
-                        sw.Write( item.meterEffectiveDate + "," );
-                        sw.Write( item.readingType + "," );
-                        sw.Write( item.meterCount );
+                    foreach( MeteringPointEICQueryResponseData item in response ) {
+                        sw.Write( item.meterEic + "," );
+                        sw.Write( item.distributionMeterId + "," );
+                        sw.Write( item.customerNo + "," );
+                        sw.Write( item.eligibleConsumptionType + "," );
+                        sw.Write( item.meterUsageState + "," );
+                        sw.Write( item.meteringPointName );
+                        sw.Write( item.meteringAddress + "," );
+                        sw.Write( item.cityId + "," );
+                        sw.Write( item.countyId + "," );
+                        sw.Write( item.meterReadingCompanyId + "," );
+                        sw.Write( item.meterReadingCompanyEic + "," );
+                        sw.Write( item.status + "," );
+                        sw.Write( item.description + "," );
+                        sw.Write( item.countyId );
                         sw.WriteLine( "" );
                     }
                 }

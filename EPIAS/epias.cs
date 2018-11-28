@@ -180,7 +180,6 @@ namespace EPIAS {
         /**
          * List Meter Counts
          **/
-
         public List<ReturnedToSupplierMeterResponse> GetMeterCountRequest( DateTime term, string countType ) {
             string request = ( new GetMeterCountRequest() {
                 header = new List<Header> {
@@ -208,6 +207,44 @@ namespace EPIAS {
                         return new List<ReturnedToSupplierMeterResponse>();
                     }
                 } catch( EXISTException ex) {
+                    throw ex;
+                } catch( Exception ex ) {
+                    if( insane_mode == false || ex.Message != "The operation has timed out" ) {
+                        throw new Exception( "error on getting meter data configuration" );
+                    }
+                }
+            }
+        }
+
+        /**
+         * Meter EIC Querying Service
+         **/
+        public List<MeteringPointEICQueryResponseData> MeteringPointEICQueryRequest( List<MeteringPointEICQuery> meteringPointEICQueries ) {
+            string request = ( new MeteringPointEICQueryRequest() {
+                header = new List<Header> {
+                    new Header("transactionId", Guid.NewGuid().ToString()),
+                    new Header("application", "proGEDIA EXIST")
+                },
+                body = new MeteringPointEICQueryList() {
+                    meteringPointEICQueries = meteringPointEICQueries
+                }
+            } ).ToString();
+
+            while( true ) {
+                try {
+                    string response = postRequest( request, url_tys + "/" + url_mcr );
+                    if( response.Length != 0 ) {
+                        if( response.IndexOf( "body" ) == -1 ) {
+                            throw new EXISTException( "" ) {
+                                error = new JavaScriptSerializer().Deserialize<responseError>( response )
+                            };
+                        } else {
+                            return ( new JavaScriptSerializer().Deserialize<MeteringPointEICQueryResponse>( response ) ).body.eicQueryResponseDatas;
+                        }
+                    } else {
+                        return new List<MeteringPointEICQueryResponseData>();
+                    }
+                } catch( EXISTException ex ) {
                     throw ex;
                 } catch( Exception ex ) {
                     if( insane_mode == false || ex.Message != "The operation has timed out" ) {
@@ -421,11 +458,9 @@ namespace EPIAS {
         }
     }
 
-
     /**
      * list-changed-supplier-meters
-     **/
-
+     **/    
     /**
      * response
      **/
@@ -486,7 +521,6 @@ namespace EPIAS {
     /**
      * list-deducted-meters
      **/
-
     /**
      * response
      **/
@@ -538,11 +572,9 @@ namespace EPIAS {
     /**
      * list-meter-count
      **/
-
     /*
-     * request
+     * response
      **/
-
     public class ReturnedToSupplierMeterResponse {
         public object meterEffectiveDate { get; set; }
         public string readingType { get; set; }
@@ -561,9 +593,8 @@ namespace EPIAS {
     }
 
     /*
-     * response
+     * request
      **/
-
     public class ListMeterCountRequest {
         public DateTime term { get; set; }
         public string countType { get; set; }
@@ -583,9 +614,72 @@ namespace EPIAS {
     }
 
     /**
+     * list-meter-eic
+     **/
+    /*
+     * response
+     **/
+    public class MeteringPointEICQueryResponseData {
+        public string meterEic { get; set; }
+        public string distributionMeterId { get; set; }
+        public string customerNo { get; set; }
+        public string eligibleConsumptionType { get; set; }
+        public string meterUsageState { get; set; }
+        public string supplierType { get; set; }
+        public string meteringPointName { get; set; }
+        public string meteringAddress { get; set; }
+        public int? cityId { get; set; }
+        public int? countyId { get; set; }
+        public string meterReadingCompanyId { get; set; }
+        public string meterReadingCompanyEic { get; set; }
+        public string status { get; set; }
+        public string description { get; set; }
+    }
+
+    public class MeteringPointEICQueryResponseDataList {
+        public List<MeteringPointEICQueryResponseData> eicQueryResponseDatas { get; set; }
+    }
+
+    public class MeteringPointEICQueryResponse {
+        public string resultCode { get; set; }
+        public string resultDescription { get; set; }
+        public string resultType { get; set; }
+        public MeteringPointEICQueryResponseDataList body { get; set; }
+    }
+
+    /*
+     * request
+     **/
+    public class MeteringPointEICQuery {
+        public string meterEic { get; set; }
+        public string distributionMeterCode { get; set; }
+        public string meterReadingCompanyEic { get; set; }
+
+        public override string ToString( ) {
+            return "{\"meterEic\":\"" + meterEic + "\",\"distributionMeterCode\":\"" + distributionMeterCode + "\",\"meterReadingCompanyEic\":\"" + meterReadingCompanyEic + "\"}";
+        }
+    }
+
+    public class MeteringPointEICQueryList {
+        public List<MeteringPointEICQuery> meteringPointEICQueries { get; set; }
+
+        public override string ToString( ) {
+            return "{\"meteringPointEICQueries\":[" + string.Join<MeteringPointEICQuery>( ",", meteringPointEICQueries.ToArray() ) + "]}";
+        }
+    }
+
+    public class MeteringPointEICQueryRequest {
+        public List<Header> header { get; set; }
+        public MeteringPointEICQueryList body { get; set; }
+
+        public override string ToString( ) {
+            return "{\"header\":[" + string.Join<Header>( ",", header.ToArray() ) + "],\"body\":" + body.ToString() + "}";
+        }
+    }
+
+    /**
      * list-meter-data-configuration
      **/
-
     /**
      * response
      **/
