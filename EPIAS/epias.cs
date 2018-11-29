@@ -17,12 +17,13 @@ namespace EPIAS {
         public string user_name { get; set; } = string.Empty;
         public string user_pass { get; set; } = string.Empty;
 
-        private readonly string url_tgt = "https://cas.epias.com.tr/cas/v1/tickets?format=text";
-        private readonly string url_tys = "https://tys.epias.com.tr";
+        private readonly string url_tgt = "https://testcas.epias.com.tr/cas/v1/tickets?format=text";
+        private readonly string url_tys = "https://testtys.epias.com.tr";
         private readonly string url_mdc = "ecms-consumption-metering-point/rest/metering/data/total/list-meter-data-configuration?format=json";
         private readonly string url_csm = "ecms-consumption-metering-point/rest/cmp/list-changed-supplier-meters?format=json";
         private readonly string url_ddm = "ecms-consumption-metering-point/rest/cmp/list-deducted-meters?format=json";
         private readonly string url_mcr = "ecms-consumption-metering-point/rest/cmp/list-meter-count?format=json";
+        private readonly string url_lme = "ecms-consumption-metering-point/rest/cmp/list-meter-eic?format=json";
 
         private string tgt = string.Empty;
         private string st = string.Empty;
@@ -232,9 +233,9 @@ namespace EPIAS {
 
             while( true ) {
                 try {
-                    string response = postRequest( request, url_tys + "/" + url_mcr );
+                    string response = postRequest( request, url_tys + "/" + url_lme );
                     if( response.Length != 0 ) {
-                        if( response.IndexOf( "body" ) == -1 ) {
+                        if( response.IndexOf( "SECURE" ) != -1 ) {
                             throw new EXISTException( "" ) {
                                 error = new JavaScriptSerializer().Deserialize<responseError>( response )
                             };
@@ -254,6 +255,79 @@ namespace EPIAS {
             }
         }
 
+        /**
+         * 
+         **/
+        public List<MeterEicInfoResponse> GetMeterEicRequest( DateTime term ) {
+            List<MeterEicInfoResponse> response = new List<MeterEicInfoResponse>();
+            MeterEicInfoServiceResponse partial;
+
+            /**
+             * get number of total record.
+             **/
+            while( true ) {
+                try {
+                    partial = GetMeterEicRequest( term, 0, 1 );
+
+                    break;
+                } catch( EXISTException ex ) {
+                    throw ex;
+                } catch( Exception ex ) {
+                    if( insane_mode == false || ex.Message != "The operation has timed out" ) {
+                        throw new Exception( "error on getting meter data configuration" );
+                    }
+                }
+            }
+
+            /**
+             * get all records.
+             **/
+            int num_of_record = partial.body.queryInformation.count;
+            for( int i = 0; i < num_of_record; i += count_perrun ) {
+                while( true ) {
+                    try {
+                        response = response.Concat( GetMeterEicRequest( term, i, Math.Min( i + count_perrun - 1, num_of_record ) ).body.meteringPointListResponse ).ToList();
+
+                        break;
+                    } catch( Exception ex ) {
+                        if( insane_mode == false || ex.Message != "The operation has timed out" ) {
+                            throw new Exception( "error on getting meter data configuration" );
+                        }
+                    }
+                }
+            }
+
+            return response;
+        }
+
+        public MeterEicInfoServiceResponse GetMeterEicRequest( DateTime meterEffectiveDate, int range_begin, int range_end ) {
+            string request = ( new GetMeterEicRequest() {
+                header = new List<Header> {
+                    new Header("transactionId", Guid.NewGuid().ToString()),
+                    new Header("application", "proGEDIA EXIST")
+                },
+                body = new ListMeterEicRequest() {
+                    meterEffectiveDate = meterEffectiveDate,
+                    range = new Range() {
+                        begin = range_begin,
+                        end = range_end
+                    }
+                }
+            } ).ToString();
+
+            string response = postRequest( request, url_tys + "/" + url_ddm );
+            if( response.Length != 0 ) {
+                if( response.IndexOf( "body" ) == -1 ) {
+                    throw new EXISTException( "" ) {
+                        error = new JavaScriptSerializer().Deserialize<responseError>( response )
+                    };
+                } else {
+                    return new JavaScriptSerializer().Deserialize<MeterEicInfoServiceResponse>( response );
+                }
+            } else {
+                return new MeterEicInfoServiceResponse();
+            }
+        }
         /**
          * Service to control meter is read or not and Listing past meters 
          **/
@@ -345,7 +419,7 @@ namespace EPIAS {
             httpWebRequest.CachePolicy = new HttpRequestCachePolicy( HttpRequestCacheLevel.NoCacheNoStore );
             httpWebRequest.ContentType = "application/json";
             httpWebRequest.ContentLength = request.Length;
-            httpWebRequest.Host = "tys.epias.com.tr";
+            httpWebRequest.Host = (new Uri( url_tys )).Host;
             httpWebRequest.KeepAlive = true;
             httpWebRequest.Method = "POST";
             httpWebRequest.Headers.Add( "Charset", "UTF-8" );
@@ -671,6 +745,121 @@ namespace EPIAS {
     public class MeteringPointEICQueryRequest {
         public List<Header> header { get; set; }
         public MeteringPointEICQueryList body { get; set; }
+
+        public override string ToString( ) {
+            return "{\"header\":[" + string.Join<Header>( ",", header.ToArray() ) + "],\"body\":" + body.ToString() + "}";
+        }
+    }
+
+    /**
+     * list-meter-eic-range
+     **/
+    /*
+     * response
+     **/
+    public class MeterEicInfoResponse {
+        public int id { get; set; }
+        public string meterEic { get; set; }
+        public string distributionMeterId { get; set; }
+        public bool status { get; set; }
+        public int meterReadingCompany { get; set; }
+        public string withDrawalDeducSettlementPointEic { get; set; }
+        public string meterName { get; set; }
+        public string meterAddress { get; set; }
+        public int countyId { get; set; }
+        public double transformerInputVoltage { get; set; }
+        public double transformerOutputVoltage { get; set; }
+        public string customerNo { get; set; }
+        public int substation { get; set; }
+        public int connectionPointLocation { get; set; }
+        public string connectionPointLocationOther { get; set; }
+        public int meteringVoltage { get; set; }
+        public int? profileType { get; set; }
+        public int? profileSubscriptionGroup { get; set; }
+        public int readingType { get; set; }
+        public double transformerPower { get; set; }
+        public int busbarVoltage { get; set; }
+        public int noLoadLoss { get; set; }
+        public int loadLoss { get; set; }
+        public object temperatureCoefficient { get; set; }
+        public object lineLength { get; set; }
+        public object lineSection { get; set; }
+        public object lineCircuit { get; set; }
+        public bool transLossFactorStatus { get; set; }
+        public double averageAnnualConsumption { get; set; }
+        public object supplyPosition { get; set; }
+        public int withdrawalPosition { get; set; }
+        public object addressCode { get; set; }
+        public bool zonningPosition { get; set; }
+        public int usageState { get; set; }
+        public object organizedIndustrialZoneEic { get; set; }
+        public bool canLoadProfile { get; set; }
+        public object mainEligibleConsumptionEic { get; set; }
+        public object supplyDeductionSettlementPoint { get; set; }
+        public int eligibleConsumptionType { get; set; }
+        public bool amr { get; set; }
+        public object maxAnnualConsumption { get; set; }
+        public bool estimation { get; set; }
+        public string withdrawalPositionDescription { get; set; }
+        public string serialNumber { get; set; }
+        public string manufacturer { get; set; }
+        public string supplierOrganization { get; set; }
+        public object contractPower { get; set; }
+        public object tariffClass { get; set; }
+        public object mainTariffGroup { get; set; }
+        public object activityCode { get; set; }
+        public int meteringType { get; set; }
+        public int supplierType { get; set; }
+        public string countyName { get; set; }
+        public object organizedIndustrialZone { get; set; }
+        public int meteringVoltageValue { get; set; }
+        public int busbarVoltageValue { get; set; }
+        public object lineCircuitDesc { get; set; }
+        public object temperatureCoefficientValue { get; set; }
+        public string profileSubscriptionGroupDesc { get; set; }
+        public string profileTypeDesc { get; set; }
+        public string withdrawalPositionName { get; set; }
+        public object supplyPositionName { get; set; }
+        public string eligibleConsumptionTypeDesc { get; set; }
+        public string usageStateDesc { get; set; }
+        public string supplierTypeDesc { get; set; }
+        public string connectionPointLocationDesc { get; set; }
+        public string substationDesc { get; set; }
+        public DateTime registrationDate { get; set; }
+    }
+
+    public class MeterEicInfoListResponse {
+        public QueryInformation queryInformation { get; set; }
+        public List<MeterEicInfoResponse> meteringPointListResponse { get; set; }
+    }
+
+    public class MeterEicInfoServiceResponse {
+        public string resultCode { get; set; }
+        public string resultDescription { get; set; }
+        public string resultType { get; set; }
+        public MeterEicInfoListResponse body { get; set; }
+    }
+
+    /*
+     * request
+     **/
+    public class ListMeterEicRequest {
+        public string meterEIC { get; set; }
+        public string eligibleConsumptionType { get; set; }
+        public DateTime meterEffectiveDate { get; set; }
+        public string meterId { get; set; }
+        public string meterUsageState { get; set; }
+        public string supplierType { get; set; }
+        public Range range { get; set; }
+
+        public override string ToString( ) {
+            return "{\"meterEic\":\"" + meterEIC + "\",\"eligibleConsumptionType\":\"" + eligibleConsumptionType + "\",\"meterEffectiveDate\":\"" + proGEDIA.ToString( meterEffectiveDate ) + "\",\"meterId\":\"" + meterId + "\",\"meterUsageState\":\"" + meterUsageState + "\",\"supplierType\":\"" + supplierType + "\",\"range\":" + range.ToString() + "}";
+        }
+    }
+
+    public class GetMeterEicRequest {
+        public List<Header> header { get; set; }
+        public ListMeterEicRequest body { get; set; }
 
         public override string ToString( ) {
             return "{\"header\":[" + string.Join<Header>( ",", header.ToArray() ) + "],\"body\":" + body.ToString() + "}";

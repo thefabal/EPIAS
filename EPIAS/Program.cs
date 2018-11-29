@@ -118,10 +118,10 @@ namespace EPIAS {
             //}
 
             /**
-             * List Meter Counts
+             * Meter EIC Querying Service
              **/
             try {
-                List<MeteringPointEICQueryResponseData> response = epias.MeteringPointEICQueryRequest( new List<MeteringPointEICQuery>() { new MeteringPointEICQuery() { meterEic = "" } } );
+                List<MeteringPointEICQueryResponseData> response = epias.MeteringPointEICQueryRequest( new List<MeteringPointEICQuery>() { new MeteringPointEICQuery() { meterEic = "40Z000000000700A" } } );
 
                 using( StreamWriter sw = new StreamWriter( "GetMeterCountRequest_" + DateTime.Now.ToString( "yyyyMMdd_HHmm" ) + ".txt" ) ) {
                     foreach( MeteringPointEICQueryResponseData item in response ) {
