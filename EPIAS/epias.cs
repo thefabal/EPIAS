@@ -24,6 +24,7 @@ namespace EPIAS {
         private readonly string url_ddm = "ecms-consumption-metering-point/rest/cmp/list-deducted-meters?format=json";
         private readonly string url_mcr = "ecms-consumption-metering-point/rest/cmp/list-meter-count?format=json";
         private readonly string url_lme = "ecms-consumption-metering-point/rest/cmp/list-meter-eic?format=json";
+        private readonly string url_mer = "ecms-consumption-metering-point/rest/cmp/list-meter-eic-range?format=json";
 
         private string tgt = string.Empty;
         private string st = string.Empty;
@@ -256,9 +257,9 @@ namespace EPIAS {
         }
 
         /**
-         * 
+         * List Meter Eic List Service
          **/
-        public List<MeterEicInfoResponse> GetMeterEicRequest( DateTime term ) {
+        public List<MeterEicInfoResponse> GetMeterEicRequest( ListMeterEicRequest term ) {
             List<MeterEicInfoResponse> response = new List<MeterEicInfoResponse>();
             MeterEicInfoServiceResponse partial;
 
@@ -267,7 +268,7 @@ namespace EPIAS {
              **/
             while( true ) {
                 try {
-                    partial = GetMeterEicRequest( term, 0, 1 );
+                    partial = GetMeterEicRequest( term, 1, 3 );
 
                     break;
                 } catch( EXISTException ex ) {
@@ -300,14 +301,19 @@ namespace EPIAS {
             return response;
         }
 
-        public MeterEicInfoServiceResponse GetMeterEicRequest( DateTime meterEffectiveDate, int range_begin, int range_end ) {
+        public MeterEicInfoServiceResponse GetMeterEicRequest( ListMeterEicRequest body, int range_begin, int range_end ) {
             string request = ( new GetMeterEicRequest() {
                 header = new List<Header> {
                     new Header("transactionId", Guid.NewGuid().ToString()),
                     new Header("application", "proGEDIA EXIST")
                 },
                 body = new ListMeterEicRequest() {
-                    meterEffectiveDate = meterEffectiveDate,
+                    meterEIC = body.meterEIC,
+                    eligibleConsumptionType = body.eligibleConsumptionType,
+                    meterEffectiveDate = body.meterEffectiveDate,
+                    meterId = body.meterId,
+                    meterUsageState = body.meterUsageState,
+                    supplierType = body.supplierType,
                     range = new Range() {
                         begin = range_begin,
                         end = range_end
@@ -315,7 +321,7 @@ namespace EPIAS {
                 }
             } ).ToString();
 
-            string response = postRequest( request, url_tys + "/" + url_ddm );
+            string response = postRequest( request, url_tys + "/" + url_mer );
             if( response.Length != 0 ) {
                 if( response.IndexOf( "body" ) == -1 ) {
                     throw new EXISTException( "" ) {
@@ -328,6 +334,7 @@ namespace EPIAS {
                 return new MeterEicInfoServiceResponse();
             }
         }
+        
         /**
          * Service to control meter is read or not and Listing past meters 
          **/
@@ -853,7 +860,7 @@ namespace EPIAS {
         public Range range { get; set; }
 
         public override string ToString( ) {
-            return "{\"meterEic\":\"" + meterEIC + "\",\"eligibleConsumptionType\":\"" + eligibleConsumptionType + "\",\"meterEffectiveDate\":\"" + proGEDIA.ToString( meterEffectiveDate ) + "\",\"meterId\":\"" + meterId + "\",\"meterUsageState\":\"" + meterUsageState + "\",\"supplierType\":\"" + supplierType + "\",\"range\":" + range.ToString() + "}";
+            return "{\"meterEIC\":\"" + meterEIC + "\",\"eligibleConsumptionType\":\"" + eligibleConsumptionType + "\",\"meterEffectiveDate\":\"" + proGEDIA.ToString( meterEffectiveDate ) + "\",\"meterId\":\"" + meterId + "\",\"meterUsageState\":\"" + meterUsageState + "\",\"supplierType\":\"" + supplierType + "\",\"range\":" + range.ToString() + "}";
         }
     }
 
