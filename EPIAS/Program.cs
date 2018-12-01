@@ -71,7 +71,7 @@ namespace EPIAS {
              * List Deducted Meters Service 
              **/
             //try {
-            //    List<DeductedMeterResponse> response = epias.GetDeductedMetersRequest( new DateTime( 2018, 11, 1 ) );
+            //    List<DeductedMeterResponse> response = epias.GetDeductedMeters( new DateTime( 2018, 11, 1 ) );
 
             //    using( StreamWriter sw = new StreamWriter( "GetDeductedMeters_" + DateTime.Now.ToString( "yyyyMMdd_HHmm" ) + ".txt" ) ) {
             //        foreach( DeductedMeterResponse item in response ) {
@@ -99,10 +99,10 @@ namespace EPIAS {
              * List Meter Counts
              **/
             //try {
-            //    List<ReturnedToSupplierMeterResponse> response = epias.GetMeterCountRequest( new DateTime( 2018, 11, 1 ), "PORTFOLIO" );
+            //    List<meterCountResponseList> response = epias.GetMeterCountRequest( new DateTime( 2018, 11, 1 ), "PORTFOLIO" );
 
             //    using( StreamWriter sw = new StreamWriter( "GetMeterCountRequest_" + DateTime.Now.ToString( "yyyyMMdd_HHmm" ) + ".txt" ) ) {
-            //        foreach( ReturnedToSupplierMeterResponse item in response ) {
+            //        foreach( meterCountResponseList item in response ) {
             //            sw.Write( item.meterEffectiveDate + "," );
             //            sw.Write( item.readingType + "," );
             //            sw.Write( item.meterCount );
@@ -154,10 +154,10 @@ namespace EPIAS {
              * List Meter Eic List Service
              **/
             try {
-                List<MeterEicInfoResponse> response = epias.GetMeterEicRequest( new ListMeterEicRequest() { meterId = "700", meterEIC = "40Z000000000700A", meterUsageState = "IN_USE", eligibleConsumptionType = "ELIGIBLE_CONSUMER", supplierType = "END_USE_SUPPLIER", meterEffectiveDate = new DateTime( 2018, 11, 1 ) } );
+                List<MeteringPointResponse> response = epias.GetMeteringPointsRequest( new ListMeteringPointsRequest() { meterEIC = "", meterUsageState = "IN_USE", eligibleConsumptionType = "ELIGIBLE_CONSUMER", supplierType = "END_USE_SUPPLIER", meterEffectiveDate = new DateTime( 2018, 11, 1 ) } );
 
                 using( StreamWriter sw = new StreamWriter( "GetMeterEicRequest_" + DateTime.Now.ToString( "yyyyMMdd_HHmm" ) + ".txt" ) ) {
-                    foreach( MeterEicInfoResponse item in response ) {
+                    foreach( MeteringPointResponse item in response ) {
                         sw.Write( item.id + "," );
                         sw.Write( item.meterEic + "," );
                         sw.Write( item.distributionMeterId + "," );
@@ -192,7 +192,7 @@ namespace EPIAS {
                         sw.Write( item.zonningPosition + "," );
                         sw.Write( item.usageState + "," );
                         sw.Write( item.organizedIndustrialZoneEic + "," );
-                        sw.Write( item.canLoadProfile + "," );                  
+                        sw.Write( item.canLoadProfile + "," );
                         sw.Write( item.mainEligibleConsumptionEic + "," );
                         sw.Write( item.supplyDeductionSettlementPoint + "," );
                         sw.Write( item.eligibleConsumptionType + "," );
