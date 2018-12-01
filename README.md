@@ -15,3 +15,12 @@ C# class for [EPİAŞ / EXIST][homepage_exist] [Metering Point Services][homepag
 [github_owner]: <https://github.com/thefabal>
 [homepage_exist]: <https://www.epias.com.tr>
 [homepage_service]: <https://tys.epias.com.tr/ecms-consumption-metering-point/technical/en/>
+
+# Usage
+```C#
+epias epias = new epias() {
+  user_name = <exist_username>,
+  user_pass = <exist_password>,
+  insane_mode = <true|false>
+};
+```
