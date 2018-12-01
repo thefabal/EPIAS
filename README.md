@@ -14,4 +14,4 @@ C# class for [EPİAŞ / EXIST][homepage_exist] [Metering Point Services][homepag
 [homepage_product]: <https://www.progedia.com>
 [github_owner]: <https://github.com/thefabal>
 [homepage_exist]: <https://www.epias.com.tr>
-[homepage_service]: <https://tys.epias.com.tr/ecms-consumption-metering-point/technical>
+[homepage_service]: <https://tys.epias.com.tr/ecms-consumption-metering-point/technical/en/>
