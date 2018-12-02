@@ -5,14 +5,12 @@ C# class for [EPİAŞ / EXIST][homepage_exist] [Metering Point Services][homepag
 
 | Function |  | Status |
 | ------ | ------ | ------ |
-| /cmp/list-changed-supplier-meters | List Meters whose supplier has changed | Testing [^1] |
-| /cmp/list-deducted-meters | Deducted Meters Service | Not tested [^1] |
-| /cmp/list-meter-count | List Meter Counts | Not tested [^1] |
-| /cmp/list-meter-eic | Meter EIC Querying Service | Not tested [^1] |
-| /cmp/list-meter-eic-range | List Meter Eic List Service | Not tested [^1] |
+| /cmp/list-changed-supplier-meters | List Meters whose supplier has changed | Testing |
+| /cmp/list-deducted-meters | Deducted Meters Service | Not tested |
+| /cmp/list-meter-count | List Meter Counts | Not tested |
+| /cmp/list-meter-eic | Meter EIC Querying Service | Not tested |
+| /cmp/list-meter-eic-range | List Meter Eic List Service | Not tested |
 | /cmp/listall | Metering Point Listing Service | Done |
-
-[^1]: Need an allowed account
 
 [homepage_owner]: <https://www.progedia.com>
 [homepage_product]: <https://www.progedia.com>
