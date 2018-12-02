@@ -5,7 +5,7 @@ C# class for [EPİAŞ / EXIST][homepage_exist] [Metering Point Services][homepag
 
 | Function |  | Status |
 | ------ | ------ | ------ |
-| /cmp/list-changed-supplier-meters | List Meters whose supplier has changed | Testing |
+| /cmp/list-changed-supplier-meters | List Meters whose supplier has changed | Not tested |
 | /cmp/list-deducted-meters | Deducted Meters Service | Not tested |
 | /cmp/list-meter-count | List Meter Counts | Not tested |
 | /cmp/list-meter-eic | Meter EIC Querying Service | Not tested |
