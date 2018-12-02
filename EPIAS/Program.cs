@@ -154,76 +154,13 @@ namespace EPIAS {
              * List Meter Eic List Service
              **/
             try {
-                List<MeteringPointResponse> response = epias.GetMeteringPointsRequest( new ListMeteringPointsRequest() { meterEIC = "", meterUsageState = "IN_USE", eligibleConsumptionType = "ELIGIBLE_CONSUMER", supplierType = "END_USE_SUPPLIER", meterEffectiveDate = new DateTime( 2018, 11, 1 ) } );
+                List<MeterEicInfoResponse> response = epias.GetMeterEicRequest( new DateTime( 2018, 11, 1 ) );
 
                 using( StreamWriter sw = new StreamWriter( "GetMeterEicRequest_" + DateTime.Now.ToString( "yyyyMMdd_HHmm" ) + ".txt" ) ) {
-                    foreach( MeteringPointResponse item in response ) {
-                        sw.Write( item.id + "," );
+                    foreach( MeterEicInfoResponse item in response ) {
                         sw.Write( item.meterEic + "," );
-                        sw.Write( item.distributionMeterId + "," );
-                        sw.Write( item.meterReadingCompany + "," );
-                        sw.Write( item.withDrawalDeducSettlementPointEic + "," );
-                        sw.Write( item.meterName );
-                        sw.Write( item.meterAddress + "," );
-                        sw.Write( item.countyId + "," );
-                        sw.Write( item.transformerInputVoltage + "," );
-                        sw.Write( item.transformerOutputVoltage + "," );
-                        sw.Write( item.customerNo + "," );
-                        sw.Write( item.substation + "," );
-                        sw.Write( item.connectionPointLocation + "," );
-                        sw.Write( item.connectionPointLocationOther + "," );
-                        sw.Write( item.meteringVoltage + "," );
-                        sw.Write( item.profileType + "," );
-                        sw.Write( item.profileSubscriptionGroup + "," );
                         sw.Write( item.readingType + "," );
-                        sw.Write( item.transformerPower + "," );
-                        sw.Write( item.busbarVoltage + "," );
-                        sw.Write( item.noLoadLoss + "," );
-                        sw.Write( item.loadLoss + "," );
-                        sw.Write( item.temperatureCoefficient + "," );
-                        sw.Write( item.lineLength + "," );
-                        sw.Write( item.lineSection + "," );
-                        sw.Write( item.lineCircuit + "," );
-                        sw.Write( item.transLossFactorStatus + "," );
-                        sw.Write( item.averageAnnualConsumption + "," );
-                        sw.Write( item.supplyPosition + "," );
-                        sw.Write( item.withdrawalPosition + "," );
-                        sw.Write( item.addressCode + "," );
-                        sw.Write( item.zonningPosition + "," );
-                        sw.Write( item.usageState + "," );
-                        sw.Write( item.organizedIndustrialZoneEic + "," );
-                        sw.Write( item.canLoadProfile + "," );
-                        sw.Write( item.mainEligibleConsumptionEic + "," );
-                        sw.Write( item.supplyDeductionSettlementPoint + "," );
-                        sw.Write( item.eligibleConsumptionType + "," );
-                        sw.Write( item.amr + "," );
-                        sw.Write( item.maxAnnualConsumption + "," );
-                        sw.Write( item.estimation + "," );
-                        sw.Write( item.withdrawalPositionDescription + "," );
-                        sw.Write( item.serialNumber + "," );
-                        sw.Write( item.manufacturer + "," );
-                        sw.Write( item.supplierOrganization + "," );
-                        sw.Write( item.contractPower + "," );
-                        sw.Write( item.tariffClass + "," );
-                        sw.Write( item.mainTariffGroup + "," );
-                        sw.Write( item.activityCode + "," );
-                        sw.Write( item.meteringType + "," );
-                        sw.Write( item.countyName + "," );
-                        sw.Write( item.organizedIndustrialZone + "," );
-                        sw.Write( item.meteringVoltageValue + "," );
-                        sw.Write( item.busbarVoltageValue + "," );
-                        sw.Write( item.lineCircuitDesc + "," );
-                        sw.Write( item.temperatureCoefficientValue + "," );
-                        sw.Write( item.profileSubscriptionGroupDesc + "," );
-                        sw.Write( item.profileTypeDesc + "," );
-                        sw.Write( item.withdrawalPositionName + "," );
-                        sw.Write( item.supplyPositionName + "," );
-                        sw.Write( item.eligibleConsumptionTypeDesc + "," );
-                        sw.Write( item.usageStateDesc + "," );
-                        sw.Write( item.supplierTypeDesc + "," );
-                        sw.Write( item.connectionPointLocationDesc + "," );
-                        sw.Write( item.substationDesc + "," );
-                        sw.Write( item.registrationDate );
+                        sw.Write( item.meterId + "," );
                         sw.WriteLine( "" );
                     }
                 }
@@ -234,6 +171,91 @@ namespace EPIAS {
             } catch( Exception ex ) {
                 Console.WriteLine( ex.Message );
             }
+
+            /**
+             * Metering Point Listing Service
+             **/
+            //try {
+            //    List<MeteringPointResponse> response = epias.GetMeteringPointsRequest( new ListMeteringPointsRequest() { meterEIC = "", meterUsageState = "IN_USE", eligibleConsumptionType = "ELIGIBLE_CONSUMER", supplierType = "END_USE_SUPPLIER", meterEffectiveDate = new DateTime( 2018, 11, 1 ) } );
+
+            //    using( StreamWriter sw = new StreamWriter( "GetMeteringPointsRequest_" + DateTime.Now.ToString( "yyyyMMdd_HHmm" ) + ".txt" ) ) {
+            //        foreach( MeteringPointResponse item in response ) {
+            //            sw.Write( item.id + "," );
+            //            sw.Write( item.meterEic + "," );
+            //            sw.Write( item.distributionMeterId + "," );
+            //            sw.Write( item.meterReadingCompany + "," );
+            //            sw.Write( item.withDrawalDeducSettlementPointEic + "," );
+            //            sw.Write( item.meterName );
+            //            sw.Write( item.meterAddress + "," );
+            //            sw.Write( item.countyId + "," );
+            //            sw.Write( item.transformerInputVoltage + "," );
+            //            sw.Write( item.transformerOutputVoltage + "," );
+            //            sw.Write( item.customerNo + "," );
+            //            sw.Write( item.substation + "," );
+            //            sw.Write( item.connectionPointLocation + "," );
+            //            sw.Write( item.connectionPointLocationOther + "," );
+            //            sw.Write( item.meteringVoltage + "," );
+            //            sw.Write( item.profileType + "," );
+            //            sw.Write( item.profileSubscriptionGroup + "," );
+            //            sw.Write( item.readingType + "," );
+            //            sw.Write( item.transformerPower + "," );
+            //            sw.Write( item.busbarVoltage + "," );
+            //            sw.Write( item.noLoadLoss + "," );
+            //            sw.Write( item.loadLoss + "," );
+            //            sw.Write( item.temperatureCoefficient + "," );
+            //            sw.Write( item.lineLength + "," );
+            //            sw.Write( item.lineSection + "," );
+            //            sw.Write( item.lineCircuit + "," );
+            //            sw.Write( item.transLossFactorStatus + "," );
+            //            sw.Write( item.averageAnnualConsumption + "," );
+            //            sw.Write( item.supplyPosition + "," );
+            //            sw.Write( item.withdrawalPosition + "," );
+            //            sw.Write( item.addressCode + "," );
+            //            sw.Write( item.zonningPosition + "," );
+            //            sw.Write( item.usageState + "," );
+            //            sw.Write( item.organizedIndustrialZoneEic + "," );
+            //            sw.Write( item.canLoadProfile + "," );
+            //            sw.Write( item.mainEligibleConsumptionEic + "," );
+            //            sw.Write( item.supplyDeductionSettlementPoint + "," );
+            //            sw.Write( item.eligibleConsumptionType + "," );
+            //            sw.Write( item.amr + "," );
+            //            sw.Write( item.maxAnnualConsumption + "," );
+            //            sw.Write( item.estimation + "," );
+            //            sw.Write( item.withdrawalPositionDescription + "," );
+            //            sw.Write( item.serialNumber + "," );
+            //            sw.Write( item.manufacturer + "," );
+            //            sw.Write( item.supplierOrganization + "," );
+            //            sw.Write( item.contractPower + "," );
+            //            sw.Write( item.tariffClass + "," );
+            //            sw.Write( item.mainTariffGroup + "," );
+            //            sw.Write( item.activityCode + "," );
+            //            sw.Write( item.meteringType + "," );
+            //            sw.Write( item.countyName + "," );
+            //            sw.Write( item.organizedIndustrialZone + "," );
+            //            sw.Write( item.meteringVoltageValue + "," );
+            //            sw.Write( item.busbarVoltageValue + "," );
+            //            sw.Write( item.lineCircuitDesc + "," );
+            //            sw.Write( item.temperatureCoefficientValue + "," );
+            //            sw.Write( item.profileSubscriptionGroupDesc + "," );
+            //            sw.Write( item.profileTypeDesc + "," );
+            //            sw.Write( item.withdrawalPositionName + "," );
+            //            sw.Write( item.supplyPositionName + "," );
+            //            sw.Write( item.eligibleConsumptionTypeDesc + "," );
+            //            sw.Write( item.usageStateDesc + "," );
+            //            sw.Write( item.supplierTypeDesc + "," );
+            //            sw.Write( item.connectionPointLocationDesc + "," );
+            //            sw.Write( item.substationDesc + "," );
+            //            sw.Write( item.registrationDate );
+            //            sw.WriteLine( "" );
+            //        }
+            //    }
+            //} catch( EXISTException ex ) {
+            //    Console.WriteLine( ex.error.resultCode );
+            //    Console.WriteLine( ex.error.resultDescription );
+            //    Console.WriteLine( ex.error.resultType );
+            //} catch( Exception ex ) {
+            //    Console.WriteLine( ex.Message );
+            //}
 
             /**
              * Service to control meter is read or not and Listing past meters

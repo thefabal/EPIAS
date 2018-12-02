@@ -99,12 +99,12 @@ namespace EPIAS {
 
             string response = postRequest( request, url_tys + "/" + url_csm );
             if( response.Length != 0 ) {
-                if( response.IndexOf( "SECURITYERROR" ) != -1 ) {
+                if( response.IndexOf( "SECURE" ) == -1 ) {
+                    return new JavaScriptSerializer().Deserialize<ChangedSupplierMeterServiceResponse>( response );
+                } else {
                     throw new EXISTException( "" ) {
                         error = new JavaScriptSerializer().Deserialize<responseError>( response )
                     };
-                } else {
-                    return new JavaScriptSerializer().Deserialize<ChangedSupplierMeterServiceResponse>( response );
                 }
             } else {
                 return new ChangedSupplierMeterServiceResponse();
@@ -177,12 +177,12 @@ namespace EPIAS {
 
             string response = postRequest( request, url_tys + "/" + url_ddm );
             if( response.Length != 0 ) {
-                if( response.IndexOf( "body" ) == -1 ) {
+                if( response.IndexOf( "SECURE" ) == -1 ) {
+                    return new JavaScriptSerializer().Deserialize<DeductedMeterServiceResponse>( response );
+                } else {
                     throw new EXISTException( "" ) {
                         error = new JavaScriptSerializer().Deserialize<responseError>( response )
                     };
-                } else {
-                    return new JavaScriptSerializer().Deserialize<DeductedMeterServiceResponse>( response );
                 }
             } else {
                 return new DeductedMeterServiceResponse();
@@ -212,12 +212,12 @@ namespace EPIAS {
                 try {
                     string response = postRequest( request, url_tys + "/" + url_mcr );
                     if( response.Length != 0 ) {
-                        if( response.IndexOf( "body" ) == -1 ) {
+                        if( response.IndexOf( "SECURE" ) == -1 ) {
+                            return ( new JavaScriptSerializer().Deserialize<MeterCountServiceResponse>( response ) ).body.meterCountResponseList;
+                        } else {
                             throw new EXISTException( "" ) {
                                 error = new JavaScriptSerializer().Deserialize<responseError>( response )
                             };
-                        } else {
-                            return ( new JavaScriptSerializer().Deserialize<MeterCountServiceResponse>( response ) ).body.meterCountResponseList;
                         }
                     } else {
                         return new List<meterCountResponseList>();
@@ -254,15 +254,61 @@ namespace EPIAS {
                 try {
                     string response = postRequest( request, url_tys + "/" + url_lme );
                     if( response.Length != 0 ) {
-                        if( response.IndexOf( "SECURE" ) != -1 ) {
+                        if( response.IndexOf( "SECURE" ) == -1 ) {
+                            return ( new JavaScriptSerializer().Deserialize<MeteringPointEICQueryResponse>( response ) ).body.eicQueryResponseDatas;
+                        } else {
                             throw new EXISTException( "" ) {
                                 error = new JavaScriptSerializer().Deserialize<responseError>( response )
                             };
-                        } else {
-                            return ( new JavaScriptSerializer().Deserialize<MeteringPointEICQueryResponse>( response ) ).body.eicQueryResponseDatas;
                         }
                     } else {
                         return new List<MeteringPointEICQueryResponseData>();
+                    }
+                } catch( EXISTException ex ) {
+                    throw ex;
+                } catch( Exception ex ) {
+                    if( insane_mode == false || ex.Message != "The operation has timed out" ) {
+                        throw new Exception( "error on getting meter data configuration" );
+                    }
+                }
+            }
+        }
+
+        /**
+         * /cmp/list-meter-eic-range
+         * Summary : List Meter Eic List Service
+         * Description : Returns the list of meter eic's
+         * Parameters : GetMeterEicRequest
+         * Responses : MeterEicInfoServiceResponse
+        **/
+        public List<MeterEicInfoResponse> GetMeterEicRequest( DateTime term ) {
+            string request = ( new GetMeterEicRequest() {
+                header = new List<Header> {
+                    new Header("transactionId", Guid.NewGuid().ToString()),
+                    new Header("application", "proGEDIA EXIST")
+                },
+                body = new ListMeterEicRequest() {
+                    term = term,
+                    range = new Range() {
+                        begin = 0,
+                        end = 1
+                    }
+                }
+            } ).ToString();
+
+            while( true ) {
+                try {
+                    string response = postRequest( request, url_tys + "/" + url_mer );
+                    if( response.Length != 0 ) {
+                        if( response.IndexOf( "SECURE" ) == -1 ) {
+                            return ( new JavaScriptSerializer().Deserialize<MeterEicInfoServiceResponse>( response ) ).body.meterEicInfoListResponse;
+                        } else {
+                            throw new EXISTException( "" ) {
+                                error = new JavaScriptSerializer().Deserialize<responseError>( response )
+                            };
+                        }
+                    } else {
+                        return new List<MeterEicInfoResponse>();
                     }
                 } catch( EXISTException ex ) {
                     throw ex;
@@ -345,12 +391,12 @@ namespace EPIAS {
 
             string response = postRequest( request, url_tys + "/" + url_mpl );
             if( response.Length != 0 ) {
-                if( response.IndexOf( "body" ) == -1 ) {
+                if( response.IndexOf( "SECURE" ) == -1 ) {
+                    return new JavaScriptSerializer().Deserialize<MeteringPointServiceResponse>( response );
+                } else {
                     throw new EXISTException( "" ) {
                         error = new JavaScriptSerializer().Deserialize<responseError>( response )
                     };
-                } else {
-                    return new JavaScriptSerializer().Deserialize<MeteringPointServiceResponse>( response );
                 }
             } else {
                 return new MeteringPointServiceResponse();
@@ -407,10 +453,6 @@ namespace EPIAS {
         }
 
         private MeteringDataAndConfigurationQueryResponse getMeterDataConfiguration( DateTime term, int range_begin, int range_end, bool pastVersion ) {
-            if( getST() == false ) {
-                return new MeteringDataAndConfigurationQueryResponse();
-            }
-
             string request = ( new MeteringDataConfigurationQueryRequest() {
                 header = new List<Header> {
                     new Header("transactionId", Guid.NewGuid().ToString()),
@@ -429,12 +471,12 @@ namespace EPIAS {
 
             string response = postRequest( request, url_tys + "/" + url_mdc );
             if( response.Length != 0 ) {
-                if( response.IndexOf( "SECURITYERROR" ) != -1 ) {
+                if( response.IndexOf( "SECURE" ) == -1 ) {
+                    return new JavaScriptSerializer().Deserialize<MeteringDataAndConfigurationQueryResponse>( response );
+                } else {
                     throw new EXISTException( "" ) {
                         error = new JavaScriptSerializer().Deserialize<responseError>( response )
                     };
-                } else {
-                    return new JavaScriptSerializer().Deserialize<MeteringDataAndConfigurationQueryResponse>( response );
                 }
             } else {
                 return new MeteringDataAndConfigurationQueryResponse();
@@ -860,6 +902,69 @@ namespace EPIAS {
         public string meterReadingCompanyEic { get; set; } // Sayacı okuyan kurumun EIC bilgisini tutar
         public string status { get; set; } //ENUM: SUCCESS, NOT_FOUND -- Yapılan sorgulama sonucu kayıt bulunma durum bilgisini tutar. SUCCES:Ölçüm Noktası Bulundu , NOT_FOUND: Ölçüm Noktası Bulunamadı
         public string description { get; set; } // Yapılan sorgulama sonucu başarısız olması durumunda nedeni.
+    }
+
+    /**
+     * list-meter-eic-range
+     **/
+    /*
+     * request
+     **/
+    /**
+	 * GetMeterEicRequest
+	 * Wrapper Request Model for Listing Meter EIC With Range
+	**/
+    public class GetMeterEicRequest {
+        public List<Header> header { get; set; } // Keeps request header informations.
+        public ListMeterEicRequest body { get; set; } // Meter EIC Request Model
+
+        public override string ToString( ) {
+            return "{\"header\":[" + string.Join<Header>( ",", header.ToArray() ) + "],\"body\":" + body.ToString() + "}";
+        }
+    }
+
+    /**
+	 * ListMeterEicRequest
+	 * Meter EIC Request Model
+	**/
+    public class ListMeterEicRequest {
+        public Range range { get; set; } // By using this object you can specify record number with start and end index values.
+        public DateTime term { get; set; } // Meter Term
+
+        public override string ToString( ) {
+            return "{\"term\":\"" + proGEDIA.ToString( term ) + "\",\"range\":" + range.ToString() + "}";
+        }
+    }
+
+    /*
+     * response
+     **/
+    /**
+	 * MeterEicInfoServiceResponse
+	 * It keeps the response info of meter eic.
+	**/
+    public class MeterEicInfoServiceResponse {
+        public string resultCode { get; set; } // 0 means success other values may differ for each request
+        public string resultDescription { get; set; } // if requests succeed return OK otherwise returns error description
+        public string resultType { get; set; } //ENUM: SUCCESS, BUSINESSERROR, SYSTEMERROR, SECURITYERROR -- returns SUCCESS for valid operation, if you violate a business rule you will get BUSINESSERROR , if our system can not process your request, you will get SYSTEMERROR
+        public MeterEicInfoListResponse body { get; set; } // It keeps the response body info of meter eic.
+    }
+
+    /**
+	 * MeterEicInfoListResponse
+	**/
+    public class MeterEicInfoListResponse {
+        public QueryInformation queryInformation { get; set; } // Keeps how many record exist in the service response and range values.
+        public List<MeterEicInfoResponse> meterEicInfoListResponse { get; set; }
+    }
+
+    /**
+	 * MeterEicInfoResponse
+	**/
+    public class MeterEicInfoResponse {
+        public string meterEic { get; set; } // Meter EIC
+        public string readingType { get; set; } //ENUM: THREE_RATE, HOURLY, SINGLE_RATE -- Meter Reading Type
+        public int? meterId { get; set; } // Meter Id
     }
 
     /**
