@@ -25,6 +25,7 @@ namespace EPIAS {
         private readonly string url_lme = "ecms-consumption-metering-point/rest/cmp/list-meter-eic?format=json";
         private readonly string url_mer = "ecms-consumption-metering-point/rest/cmp/list-meter-eic-range?format=json";
         private readonly string url_mpl = "ecms-consumption-metering-point/rest/cmp/listall?format=json";
+        private readonly string url_mpr = "ecms-consumption-metering-point/rest/cmp/new-meters-to-be-read?format=json";
 
         private readonly string url_mdc = "ecms-consumption-metering-point/rest/metering/data/total/list-meter-data-configuration?format=json";
 
@@ -327,7 +328,7 @@ namespace EPIAS {
          * Parameters : GetMeteringPointsRequest
          * Responses : MeteringPointServiceResponse
         **/
-        public List<MeteringPointResponse> GetMeteringPointsRequest( ListMeteringPointsRequest term ) {
+        public List<MeteringPointResponse> GetMeteringPointsRequest( ListMeteringPointsRequest request ) {
             int num_of_record = 0;
 
             List<MeteringPointResponse> response = new List<MeteringPointResponse>();
@@ -337,7 +338,7 @@ namespace EPIAS {
              **/
             while( true ) {
                 try {
-                    num_of_record = GetMeteringPointsRequest( term, 0, 1 ).body.queryInformation.count.Value;
+                    num_of_record = GetMeteringPointsRequest( request, 0, 1 ).body.queryInformation.count.Value;
 
                     break;
                 } catch( EXISTException ex ) {
@@ -355,7 +356,7 @@ namespace EPIAS {
             for( int i = 0; i < num_of_record; i += count_perrun ) {
                 while( true ) {
                     try {
-                        response = response.Concat( GetMeteringPointsRequest( term, i, Math.Min( i + count_perrun - 1, num_of_record ) ).body.meteringPointListResponse ).ToList();
+                        response = response.Concat( GetMeteringPointsRequest( request, i, Math.Min( i + count_perrun - 1, num_of_record ) ).body.meteringPointListResponse ).ToList();
 
                         break;
                     } catch( Exception ex ) {
@@ -402,6 +403,87 @@ namespace EPIAS {
                 return new MeteringPointServiceResponse();
             }
         }
+
+        /**
+         * /cmp/new-meters-to-be-read
+         * Summary : List New Metering Points To Be Read Service
+         * Description : If meter eic is given, it returns info of that metering point. If range is given, it returns all metering points info in that range.
+         * Parameters : GetNewMeteringPointsRequest
+         * Responses : ReadingMeteringPointServiceResponse
+        **/
+        public List<ReadingMeteringPointResponse> GetNewMeteringPointsRequest( ListNewMeteringPointsToBeRead request ) {
+            int num_of_record = 0;
+
+            List<ReadingMeteringPointResponse> response = new List<ReadingMeteringPointResponse>();
+
+            /**
+             * get number of total record.
+             **/
+            while( true ) {
+                try {
+                    num_of_record = GetNewMeteringPointsRequest( request, 0, 1 ).body.queryInformation.count.Value;
+
+                    break;
+                } catch( EXISTException ex ) {
+                    throw ex;
+                } catch( Exception ex ) {
+                    if( insane_mode == false || ex.Message != "The operation has timed out" ) {
+                        throw new Exception( "error on getting meter data configuration" );
+                    }
+                }
+            }
+
+            /**
+             * get all records.
+             **/
+            for( int i = 0; i < num_of_record; i += count_perrun ) {
+                while( true ) {
+                    try {
+                        response = response.Concat( GetNewMeteringPointsRequest( request, i, Math.Min( i + count_perrun - 1, num_of_record ) ).body.readingMeteringPointListResponse ).ToList();
+
+                        break;
+                    } catch( Exception ex ) {
+                        if( insane_mode == false || ex.Message != "The operation has timed out" ) {
+                            throw new Exception( "error on getting meter data configuration" );
+                        }
+                    }
+                }
+            }
+
+            return response;
+        }
+
+        private ReadingMeteringPointServiceResponse GetNewMeteringPointsRequest( ListNewMeteringPointsToBeRead body, int range_begin, int range_end ) {
+            string request = ( new GetNewMeteringPointsRequest() {
+                header = new List<Header> {
+                    new Header("transactionId", Guid.NewGuid().ToString()),
+                    new Header("application", "proGEDIA EXIST")
+                },
+                body = new ListNewMeteringPointsToBeRead() {
+                    listType = body.listType,
+                    meterEic = body.meterEic,
+                    term = body.term,
+                    range = new Range() {
+                        begin = range_begin,
+                        end = range_end
+                    }
+                }
+            } ).ToString();
+
+            string response = postRequest( request, url_tys + "/" + url_mpr );
+            if( response.Length != 0 ) {
+                if( response.IndexOf( "SECURE" ) == -1 ) {
+                    return new JavaScriptSerializer().Deserialize<ReadingMeteringPointServiceResponse>( response );
+                } else {
+                    throw new EXISTException( "" ) {
+                        error = new JavaScriptSerializer().Deserialize<responseError>( response )
+                    };
+                }
+            } else {
+                return new ReadingMeteringPointServiceResponse();
+            }
+        }
+
 
         /**
          * /metering/data/total/list-meter-data-configuration
@@ -1101,6 +1183,89 @@ namespace EPIAS {
         public string connectionPointLocationDesc { get; set; } // Trafoya Gören Konum Bilgisi
         public string substationDesc { get; set; } // Trafo Merkezi Bilgisi
         public DateTime? registrationDate { get; set; } // Ölçüm noktası kayıt tarih bilgisi.
+    }
+
+    /**
+      * GetNewMeteringPointsRequest
+      **/
+    /*
+     * request
+     **/
+    /**
+     * GetNewMeteringPointsRequest
+     * Wrapper Request Model for New Metering Points To Be Read
+     **/
+    public class GetNewMeteringPointsRequest {
+        public List<Header> header { get; set; } // Keeps request header informations.
+        public ListNewMeteringPointsToBeRead body { get; set; } // New Metering Points To Be Read Request Model
+
+        public override string ToString( ) {
+            return "{\"header\":[" + string.Join<Header>( ",", header.ToArray() ) + "],\"body\":" + body.ToString() + "}";
+        }
+    }
+
+    /**
+     * ListNewMeteringPointsToBeRead
+     * New Metering Points To Be Read Request Model
+     **/
+    public class ListNewMeteringPointsToBeRead {
+        public Range range { get; set; } // By using this object you can specify record number with start and end index values.
+        public string listType { get; set; } //ENUM: PRE_LIST, EXACT_LIST -- Ön liste veya kesin liste durumunu belirtir. PRE_LIST:Ön Liste , EXACT_LIST = Kesin Liste
+        public DateTime term { get; set; } // Meter Term
+        public string meterEic { get; set; } // Meter EIC
+
+        public override string ToString( ) {
+            return "{\"range\":" + range.ToString() + ",\"listType\":\"" + listType + "\",\"term\":\"" + proGEDIA.ToString( term ) + "\",\"meterEic\":\"" + meterEic + "\"}";
+        }
+    }
+
+    /*
+     * response
+     **/
+    /**
+	 * ReadingMeteringPointServiceResponse
+	 * It keeps the service response of meters based on their reading type (new to be read or non-obligatory to read).
+	**/
+    public class ReadingMeteringPointServiceResponse {
+        public string resultCode { get; set; } // 0 means success other values may differ for each request
+        public string resultDescription { get; set; } // if requests succeed return OK otherwise returns error description
+        public string resultType { get; set; } //ENUM: SUCCESS, BUSINESSERROR, SYSTEMERROR, SECURITYERROR -- returns SUCCESS for valid operation, if you violate a business rule you will get BUSINESSERROR , if our system can not process your request, you will get SYSTEMERROR
+        public ReadingMeteringPointListResponse body { get; set; } // It keeps the response body info of meters based on their reading type (new to be read or non-obligatory to read).
+    }
+
+    /**
+	 * ReadingMeteringPointListResponse
+	 * It keeps the response body info of meters based on their reading type (new to be read or non-obligatory to read).
+	**/
+    public class ReadingMeteringPointListResponse {
+        public QueryInformation queryInformation { get; set; } // Keeps how many record exist in the service response and range values.
+        public List<ReadingMeteringPointResponse> readingMeteringPointListResponse { get; set; } // It keeps the response info of meters based on their reading type (new to be read or non-obligatory to read).
+    }
+
+    /**
+	 * ReadingMeteringPointResponse
+	 * It keeps the response info of meters based on their reading type (new to be read or non-obligatory to read).
+	**/
+    public class ReadingMeteringPointResponse {
+        public string meterEic { get; set; } // Meter EIC
+        public string meterName { get; set; } // Meter Name
+        public int? meterId { get; set; } // Meter Id
+        public DateTime? meterEffectiveDate { get; set; } // Meter Effective Date
+        public string readingType { get; set; } //ENUM: THREE_RATE, HOURLY, SINGLE_RATE -- Meter Reading Type
+        public int? readingTypeId { get; set; } // Meter Reading Type
+        public int? meterLossesType { get; set; } // Meter Losses Type
+        public int? organization { get; set; } // Organization Id
+        public int? meterReadingOrganization { get; set; } // Meter Reading Organization
+        public int? profileSubscriptionGroup { get; set; } // Meter Subscription Group
+        public string distributionMeterCode { get; set; } // Distribution Meter Code
+        public string customerNo { get; set; } // Customer No
+        public string meterAddress { get; set; } // Meter Address
+        public int? countyId { get; set; } // County Id
+        public double? averageAnnualConsumption { get; set; } // Average Annual Consumption
+        public string organizationEic { get; set; } // Organization EIC
+        public string organizationCode { get; set; } // Organization Code
+        public string profileSubscriptionGroupName { get; set; } // Meter Subscription Group Name
+        public string city { get; set; } // City that meter belongs to.
     }
 
     /**
