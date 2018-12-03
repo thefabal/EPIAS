@@ -11,6 +11,7 @@ C# class for [EPİAŞ / EXIST][homepage_exist] [Metering Point Services][homepag
 | /cmp/list-meter-eic | Meter EIC Querying Service | Not tested |
 | /cmp/list-meter-eic-range | List Meter Eic List Service | Not tested |
 | /cmp/listall | Metering Point Listing Service | Done |
+| /cmp/new-meters-to-be-read | List New Metering Points To Be Read Service | Not tested |
 
 [homepage_owner]: <https://www.progedia.com>
 [homepage_product]: <https://www.progedia.com>
