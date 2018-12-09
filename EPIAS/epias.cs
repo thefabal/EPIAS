@@ -57,7 +57,7 @@ namespace EPIAS {
                     throw ex;
                 } catch( Exception ex ) {
                     if( insane_mode == false || ex.Message != "The operation has timed out" ) {
-                        throw new Exception( "error on getting meter data configuration" );
+                        throw ex;
                     }
                 }
             }
@@ -73,7 +73,7 @@ namespace EPIAS {
                         break;
                     } catch( Exception ex ) {
                         if( insane_mode == false || ex.Message != "The operation has timed out" ) {
-                            throw new Exception( "error on getting meter data configuration" );
+                            throw ex;
                         }
                     }
                 }
@@ -136,7 +136,7 @@ namespace EPIAS {
                     throw ex;
                 } catch( Exception ex ) {
                     if( insane_mode == false || ex.Message != "The operation has timed out" ) {
-                        throw new Exception( "error on getting meter data configuration" );
+                        throw ex;
                     }
                 }
             }
@@ -152,7 +152,7 @@ namespace EPIAS {
                         break;
                     } catch( Exception ex ) {
                         if( insane_mode == false || ex.Message != "The operation has timed out" ) {
-                            throw new Exception( "error on getting meter data configuration" );
+                            throw ex;
                         }
                     }
                 }
@@ -227,7 +227,7 @@ namespace EPIAS {
                     throw ex;
                 } catch( Exception ex ) {
                     if( insane_mode == false || ex.Message != "The operation has timed out" ) {
-                        throw new Exception( "error on getting meter data configuration" );
+                        throw ex;
                     }
                 }
             }
@@ -269,7 +269,7 @@ namespace EPIAS {
                     throw ex;
                 } catch( Exception ex ) {
                     if( insane_mode == false || ex.Message != "The operation has timed out" ) {
-                        throw new Exception( "error on getting meter data configuration" );
+                        throw ex;
                     }
                 }
             }
@@ -315,7 +315,7 @@ namespace EPIAS {
                     throw ex;
                 } catch( Exception ex ) {
                     if( insane_mode == false || ex.Message != "The operation has timed out" ) {
-                        throw new Exception( "error on getting meter data configuration" );
+                        throw ex;
                     }
                 }
             }
@@ -345,7 +345,7 @@ namespace EPIAS {
                     throw ex;
                 } catch( Exception ex ) {
                     if( insane_mode == false || ex.Message != "The operation has timed out" ) {
-                        throw new Exception( "error on getting meter data configuration" );
+                        throw ex;
                     }
                 }
             }
@@ -361,7 +361,7 @@ namespace EPIAS {
                         break;
                     } catch( Exception ex ) {
                         if( insane_mode == false || ex.Message != "The operation has timed out" ) {
-                            throw new Exception( "error on getting meter data configuration" );
+                            throw ex;
                         }
                     }
                 }
@@ -428,7 +428,7 @@ namespace EPIAS {
                     throw ex;
                 } catch( Exception ex ) {
                     if( insane_mode == false || ex.Message != "The operation has timed out" ) {
-                        throw new Exception( "error on getting meter data configuration" );
+                        throw ex;
                     }
                 }
             }
@@ -444,7 +444,7 @@ namespace EPIAS {
                         break;
                     } catch( Exception ex ) {
                         if( insane_mode == false || ex.Message != "The operation has timed out" ) {
-                            throw new Exception( "error on getting meter data configuration" );
+                            throw ex;
                         }
                     }
                 }
@@ -509,7 +509,7 @@ namespace EPIAS {
                     throw ex;
                 } catch( Exception ex ) {
                     if( insane_mode == false || ex.Message != "The operation has timed out" ) {
-                        throw new Exception( "error on getting meter data configuration" );
+                        throw ex;
                     }
                 }
             }
@@ -525,7 +525,7 @@ namespace EPIAS {
                         break;
                     } catch( Exception ex ) {
                         if( insane_mode == false || ex.Message != "The operation has timed out" ) {
-                            throw new Exception( "error on getting meter data configuration" );
+                            throw ex;
                         }
                     }
                 }
@@ -652,6 +652,7 @@ namespace EPIAS {
             httpWebRequest.Host = (new Uri( url_tgt ) ).Host;
             httpWebRequest.KeepAlive = true;
             httpWebRequest.Method = "POST";
+
             httpWebRequest.Headers.Add( "Charset", "UTF-8" );
 
             if( swTGT.IsRunning ) {
