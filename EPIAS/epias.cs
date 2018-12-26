@@ -17,7 +17,7 @@ namespace EPIAS {
         public string user_name { get; set; } = string.Empty;
         public string user_pass { get; set; } = string.Empty;
 
-        private readonly string url_tgt = "https://testcas.epias.com.tr/cas/v1/tickets?format=text";
+        private readonly string url_tgt = "https://testcas.epias.com.tr/cas/v1/tickets?format=json";
         private readonly string url_tys = "https://testtys.epias.com.tr";
         private readonly string url_csm = "ecms-consumption-metering-point/rest/cmp/list-changed-supplier-meters?format=json";
         private readonly string url_ddm = "ecms-consumption-metering-point/rest/cmp/list-deducted-meters?format=json";
@@ -645,14 +645,16 @@ namespace EPIAS {
             string request = "username=" + user_name + "&password=" + user_pass;
             HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create( url_tgt );
 
-            httpWebRequest.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
-            httpWebRequest.CachePolicy = new HttpRequestCachePolicy( HttpRequestCacheLevel.NoCacheNoStore );
+            //httpWebRequest.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
+            httpWebRequest.Host = ( new Uri( url_tgt ) ).Host;
+            //httpWebRequest.CachePolicy = new HttpRequestCachePolicy( HttpRequestCacheLevel.NoCacheNoStore );
             httpWebRequest.ContentType = "application/x-www-form-urlencoded";
+            httpWebRequest.Accept = "application/x-www-form-urlencoded";
             httpWebRequest.ContentLength = request.Length;
-            httpWebRequest.Host = (new Uri( url_tgt ) ).Host;
-            httpWebRequest.KeepAlive = true;
+            //httpWebRequest.KeepAlive = true;
             httpWebRequest.Method = "POST";
 
+            httpWebRequest.Headers.Add( "Cache-Control", "no-cache" );
             httpWebRequest.Headers.Add( "Charset", "UTF-8" );
 
             if( swTGT.IsRunning ) {
