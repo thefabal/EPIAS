@@ -657,14 +657,16 @@ namespace EPIAS {
             string request = "username=" + user_name + "&password=" + user_pass;
             HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create( url_tgt );
 
-            httpWebRequest.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
-            httpWebRequest.CachePolicy = new HttpRequestCachePolicy( HttpRequestCacheLevel.NoCacheNoStore );
+            //httpWebRequest.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
+            httpWebRequest.Host = ( new Uri( url_tgt ) ).Host;
+            //httpWebRequest.CachePolicy = new HttpRequestCachePolicy( HttpRequestCacheLevel.NoCacheNoStore );
             httpWebRequest.ContentType = "application/x-www-form-urlencoded";
+            httpWebRequest.Accept = "application/x-www-form-urlencoded";
             httpWebRequest.ContentLength = request.Length;
-            httpWebRequest.Host = (new Uri( url_tgt ) ).Host;
-            httpWebRequest.KeepAlive = true;
+            //httpWebRequest.KeepAlive = true;
             httpWebRequest.Method = "POST";
 
+            httpWebRequest.Headers.Add( "Cache-Control", "no-cache" );
             httpWebRequest.Headers.Add( "Charset", "UTF-8" );
 
             if( swTGT.IsRunning ) {
