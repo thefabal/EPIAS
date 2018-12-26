@@ -5,11 +5,11 @@ C# class for [EPİAŞ / EXIST][homepage_exist] [Metering Point Services][homepag
 
 | Function |  | Status |
 | ------ | ------ | ------ |
-| /cmp/list-changed-supplier-meters | List Meters whose supplier has changed | Not tested |
-| /cmp/list-deducted-meters | Deducted Meters Service | Not tested |
-| /cmp/list-meter-count | List Meter Counts | Not tested |
-| /cmp/list-meter-eic | Meter EIC Querying Service | Not tested |
-| /cmp/list-meter-eic-range | List Meter Eic List Service | Not tested |
+| /cmp/list-changed-supplier-meters | List Meters whose supplier has changed | Done |
+| /cmp/list-deducted-meters | Deducted Meters Service | Partially Tested |
+| /cmp/list-meter-count | List Meter Counts | Partially Tested |
+| /cmp/list-meter-eic | Meter EIC Querying Service | Partially Tested |
+| /cmp/list-meter-eic-range | List Meter Eic List Service | Partially Tested |
 | /cmp/listall | Metering Point Listing Service | Done |
 | /cmp/new-meters-to-be-read | List New Metering Points To Be Read Service | Not tested |
 
