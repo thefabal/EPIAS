@@ -12,13 +12,14 @@ using System.Web.Script.Serialization;
 
 namespace EPIAS {
     class epias {
+        private readonly bool test_run = false;
         public int count_perrun { get; set; } = 1000;
         public bool insane_mode { get; set; } = false;
         public string user_name { get; set; } = string.Empty;
         public string user_pass { get; set; } = string.Empty;
 
-        private readonly string url_tgt = "https://testcas.epias.com.tr/cas/v1/tickets?format=json";
-        private readonly string url_tys = "https://testtys.epias.com.tr";
+        private readonly string url_tgt = "cas.epias.com.tr/cas/v1/tickets?format=text";
+        private readonly string url_tys = "tys.epias.com.tr";
         private readonly string url_csm = "ecms-consumption-metering-point/rest/cmp/list-changed-supplier-meters?format=json";
         private readonly string url_ddm = "ecms-consumption-metering-point/rest/cmp/list-deducted-meters?format=json";
         private readonly string url_mcr = "ecms-consumption-metering-point/rest/cmp/list-meter-count?format=json";
@@ -26,12 +27,23 @@ namespace EPIAS {
         private readonly string url_mer = "ecms-consumption-metering-point/rest/cmp/list-meter-eic-range?format=json";
         private readonly string url_mpl = "ecms-consumption-metering-point/rest/cmp/listall?format=json";
         private readonly string url_mpr = "ecms-consumption-metering-point/rest/cmp/new-meters-to-be-read?format=json";
-
         private readonly string url_mdc = "ecms-consumption-metering-point/rest/metering/data/total/list-meter-data-configuration?format=json";
 
         private string tgt = string.Empty;
         private string st = string.Empty;
         private static Stopwatch swTGT = new Stopwatch();
+
+        public epias(bool server ) {
+            test_run = server;
+
+            if( test_run) {
+                url_tgt = "https://test" + url_tgt;
+                url_tys = "https://test" + url_tys;
+            } else {
+                url_tgt = "https://" + url_tgt;
+                url_tys = "https://" + url_tys;
+            }
+        }
 
         /**
          * /cmp/list-changed-supplier-meters
@@ -40,7 +52,7 @@ namespace EPIAS {
          * Parameters : GetChangedSupplierMetersRequest
          * Responses : ChangedSupplierMeterServiceResponse
         **/
-        public List<ChangedSupplierMeterResponse> getChangedSupplierMeters( DateTime term, string listType ) {
+        public List<ChangedSupplierMeterResponse> GetChangedSupplierMeters( DateTime term, string listType ) {
             int num_of_record = 0;
 
             List<ChangedSupplierMeterResponse> response = new List<ChangedSupplierMeterResponse>();
@@ -645,16 +657,14 @@ namespace EPIAS {
             string request = "username=" + user_name + "&password=" + user_pass;
             HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create( url_tgt );
 
-            //httpWebRequest.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
-            httpWebRequest.Host = ( new Uri( url_tgt ) ).Host;
-            //httpWebRequest.CachePolicy = new HttpRequestCachePolicy( HttpRequestCacheLevel.NoCacheNoStore );
+            httpWebRequest.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
+            httpWebRequest.CachePolicy = new HttpRequestCachePolicy( HttpRequestCacheLevel.NoCacheNoStore );
             httpWebRequest.ContentType = "application/x-www-form-urlencoded";
-            httpWebRequest.Accept = "application/x-www-form-urlencoded";
             httpWebRequest.ContentLength = request.Length;
-            //httpWebRequest.KeepAlive = true;
+            httpWebRequest.Host = (new Uri( url_tgt ) ).Host;
+            httpWebRequest.KeepAlive = true;
             httpWebRequest.Method = "POST";
 
-            httpWebRequest.Headers.Add( "Cache-Control", "no-cache" );
             httpWebRequest.Headers.Add( "Charset", "UTF-8" );
 
             if( swTGT.IsRunning ) {
@@ -677,7 +687,7 @@ namespace EPIAS {
                     return true;
                 }
             } catch(Exception ex) {
-                if( ex.Message.IndexOf( "Bad Request" ) != -1 ) {
+                if( ex.Message.IndexOf( "Bad Request" ) != -1 || ex.Message.IndexOf( "Hatalı İstek" ) != -1 ) {
                     throw new EXISTException() {
                         error = new responseError() {
                             resultCode = "BADREQUEST",
