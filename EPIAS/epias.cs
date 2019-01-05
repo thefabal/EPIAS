@@ -27,16 +27,17 @@ namespace EPIAS {
         private readonly string url_mer = "ecms-consumption-metering-point/rest/cmp/list-meter-eic-range?format=json";
         private readonly string url_mpl = "ecms-consumption-metering-point/rest/cmp/listall?format=json";
         private readonly string url_mpr = "ecms-consumption-metering-point/rest/cmp/new-meters-to-be-read?format=json";
+        private readonly string url_ntr = "ecms-consumption-metering-point/rest/cmp/nonobligatory-to-read?format=json";
         private readonly string url_mdc = "ecms-consumption-metering-point/rest/metering/data/total/list-meter-data-configuration?format=json";
 
         private string tgt = string.Empty;
         private string st = string.Empty;
         private static Stopwatch swTGT = new Stopwatch();
 
-        public epias(bool server ) {
+        public epias(bool server) {
             test_run = server;
 
-            if( test_run) {
+            if( test_run ) {
                 url_tgt = "https://test" + url_tgt;
                 url_tys = "https://test" + url_tys;
             } else {
@@ -209,7 +210,7 @@ namespace EPIAS {
          * Parameters : GetMeterCountRequest
          * Responses : MeterCountServiceResponse
         **/
-        public List<meterCountResponseList> GetMeterCountRequest( DateTime term, string countType ) {
+        public List<meterCountResponseList> GetMeterCount( DateTime term, string countType ) {
             string request = ( new GetMeterCountRequest() {
                 header = new List<Header> {
                     new Header("transactionId", Guid.NewGuid().ToString()),
@@ -252,7 +253,7 @@ namespace EPIAS {
          * Parameters : MeteringPointEICQueryRequest
          * Responses : MeteringPointEICQueryResponse
         **/
-        public List<MeteringPointEICQueryResponseData> MeteringPointEICQueryRequest( List<MeteringPointEICQuery> meteringPointEICQueries ) {
+        public List<MeteringPointEICQueryResponseData> MeteringPointEICQuery( List<MeteringPointEICQuery> meteringPointEICQueries ) {
             string request = ( new MeteringPointEICQueryRequest() {
                 header = new List<Header> {
                     new Header("transactionId", Guid.NewGuid().ToString()),
@@ -294,7 +295,7 @@ namespace EPIAS {
          * Parameters : GetMeterEicRequest
          * Responses : MeterEicInfoServiceResponse
         **/
-        public List<MeterEicInfoResponse> GetMeterEicRequest( DateTime term ) {
+        public List<MeterEicInfoResponse> GetMeterEic( DateTime term ) {
             string request = ( new GetMeterEicRequest() {
                 header = new List<Header> {
                     new Header("transactionId", Guid.NewGuid().ToString()),
@@ -340,7 +341,7 @@ namespace EPIAS {
          * Parameters : GetMeteringPointsRequest
          * Responses : MeteringPointServiceResponse
         **/
-        public List<MeteringPointResponse> GetMeteringPointsRequest( ListMeteringPointsRequest request ) {
+        public List<MeteringPointResponse> GetMeteringPoints( ListMeteringPointsRequest request ) {
             int num_of_record = 0;
 
             List<MeteringPointResponse> response = new List<MeteringPointResponse>();
@@ -350,7 +351,7 @@ namespace EPIAS {
              **/
             while( true ) {
                 try {
-                    num_of_record = GetMeteringPointsRequest( request, 0, 1 ).body.queryInformation.count.Value;
+                    num_of_record = GetMeteringPoints( request, 0, 1 ).body.queryInformation.count.Value;
 
                     break;
                 } catch( EXISTException ex ) {
@@ -368,7 +369,7 @@ namespace EPIAS {
             for( int i = 0; i < num_of_record; i += count_perrun ) {
                 while( true ) {
                     try {
-                        response = response.Concat( GetMeteringPointsRequest( request, i, Math.Min( i + count_perrun - 1, num_of_record ) ).body.meteringPointListResponse ).ToList();
+                        response = response.Concat( GetMeteringPoints( request, i, Math.Min( i + count_perrun - 1, num_of_record ) ).body.meteringPointListResponse ).ToList();
 
                         break;
                     } catch( Exception ex ) {
@@ -382,7 +383,7 @@ namespace EPIAS {
             return response;
         }
 
-        private MeteringPointServiceResponse GetMeteringPointsRequest( ListMeteringPointsRequest body, int range_begin, int range_end ) {
+        private MeteringPointServiceResponse GetMeteringPoints( ListMeteringPointsRequest body, int range_begin, int range_end ) {
             string request = ( new GetMeteringPointsRequest() {
                 header = new List<Header> {
                     new Header("transactionId", Guid.NewGuid().ToString()),
@@ -423,7 +424,7 @@ namespace EPIAS {
          * Parameters : GetNewMeteringPointsRequest
          * Responses : ReadingMeteringPointServiceResponse
         **/
-        public List<ReadingMeteringPointResponse> GetNewMeteringPointsRequest( ListNewMeteringPointsToBeRead request ) {
+        public List<ReadingMeteringPointResponse> GetNewMeteringPoints( ListNewMeteringPointsToBeRead request ) {
             int num_of_record = 0;
 
             List<ReadingMeteringPointResponse> response = new List<ReadingMeteringPointResponse>();
@@ -433,7 +434,7 @@ namespace EPIAS {
              **/
             while( true ) {
                 try {
-                    num_of_record = GetNewMeteringPointsRequest( request, 0, 1 ).body.queryInformation.count.Value;
+                    num_of_record = GetNewMeteringPoints( request, 0, 1 ).body.queryInformation.count.Value;
 
                     break;
                 } catch( EXISTException ex ) {
@@ -451,7 +452,7 @@ namespace EPIAS {
             for( int i = 0; i < num_of_record; i += count_perrun ) {
                 while( true ) {
                     try {
-                        response = response.Concat( GetNewMeteringPointsRequest( request, i, Math.Min( i + count_perrun - 1, num_of_record ) ).body.readingMeteringPointListResponse ).ToList();
+                        response = response.Concat( GetNewMeteringPoints( request, i, Math.Min( i + count_perrun - 1, num_of_record ) ).body.readingMeteringPointListResponse ).ToList();
 
                         break;
                     } catch( Exception ex ) {
@@ -465,7 +466,7 @@ namespace EPIAS {
             return response;
         }
 
-        private ReadingMeteringPointServiceResponse GetNewMeteringPointsRequest( ListNewMeteringPointsToBeRead body, int range_begin, int range_end ) {
+        private ReadingMeteringPointServiceResponse GetNewMeteringPoints( ListNewMeteringPointsToBeRead body, int range_begin, int range_end ) {
             string request = ( new GetNewMeteringPointsRequest() {
                 header = new List<Header> {
                     new Header("transactionId", Guid.NewGuid().ToString()),
@@ -496,6 +497,85 @@ namespace EPIAS {
             }
         }
 
+        /**
+         * /cmp/nonobligatory-to-read
+         * Summary : List Non-obligatory To Read Metering Points Service
+         * Description : If meter eic is given, it returns info of that metering point. If range is given, it returns all metering points info in that range.
+         * Parameters : GetNonobligatoryToReadMetersRequest
+         * Responses : ReadingMeteringPointServiceResponse
+         **/
+        public List<ReadingMeteringPointResponse> GetNonobligatoryToReadMeters( ListNonobligatoryToReadMetersRequest request ) {
+            int num_of_record = 0;
+
+            List<ReadingMeteringPointResponse> response = new List<ReadingMeteringPointResponse>();
+
+            /**
+             * get number of total record.
+             **/
+            while( true ) {
+                try {
+                    num_of_record = GetNonobligatoryToReadMeters( request, 0, 1 ).body.queryInformation.count.Value;
+
+                    break;
+                } catch( EXISTException ex ) {
+                    throw ex;
+                } catch( Exception ex ) {
+                    if( insane_mode == false || ex.Message != "The operation has timed out" ) {
+                        throw ex;
+                    }
+                }
+            }
+
+            /**
+             * get all records.
+             **/
+            for( int i = 0; i < num_of_record; i += count_perrun ) {
+                while( true ) {
+                    try {
+                        response = response.Concat( GetNonobligatoryToReadMeters( request, i, Math.Min( i + count_perrun - 1, num_of_record ) ).body.readingMeteringPointListResponse ).ToList();
+
+                        break;
+                    } catch( Exception ex ) {
+                        if( insane_mode == false || ex.Message != "The operation has timed out" ) {
+                            throw ex;
+                        }
+                    }
+                }
+            }
+
+            return response;
+        }
+
+        private ReadingMeteringPointServiceResponse GetNonobligatoryToReadMeters( ListNonobligatoryToReadMetersRequest body, int range_begin, int range_end ) {
+            string request = ( new GetNewMeteringPointsRequest() {
+                header = new List<Header> {
+                    new Header("transactionId", Guid.NewGuid().ToString()),
+                    new Header("application", "proGEDIA EXIST")
+                },
+                body = new ListNewMeteringPointsToBeRead() {
+                    listType = body.listType,
+                    meterEic = body.meterEic,
+                    term = body.term,
+                    range = new Range() {
+                        begin = range_begin,
+                        end = range_end
+                    }
+                }
+            } ).ToString();
+
+            string response = postRequest( request, url_tys + "/" + url_ntr );
+            if( response.Length != 0 ) {
+                if( response.IndexOf( "SECURE" ) == -1 ) {
+                    return new JavaScriptSerializer().Deserialize<ReadingMeteringPointServiceResponse>( response );
+                } else {
+                    throw new EXISTException( "" ) {
+                        error = new JavaScriptSerializer().Deserialize<responseError>( response )
+                    };
+                }
+            } else {
+                return new ReadingMeteringPointServiceResponse();
+            }
+        }
 
         /**
          * /metering/data/total/list-meter-data-configuration
@@ -657,13 +737,13 @@ namespace EPIAS {
             string request = "username=" + user_name + "&password=" + user_pass;
             HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create( url_tgt );
 
-            //httpWebRequest.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
+            httpWebRequest.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
             httpWebRequest.Host = ( new Uri( url_tgt ) ).Host;
-            //httpWebRequest.CachePolicy = new HttpRequestCachePolicy( HttpRequestCacheLevel.NoCacheNoStore );
+            httpWebRequest.CachePolicy = new HttpRequestCachePolicy( HttpRequestCacheLevel.NoCacheNoStore );
             httpWebRequest.ContentType = "application/x-www-form-urlencoded";
             httpWebRequest.Accept = "application/x-www-form-urlencoded";
             httpWebRequest.ContentLength = request.Length;
-            //httpWebRequest.KeepAlive = true;
+            httpWebRequest.KeepAlive = true;
             httpWebRequest.Method = "POST";
 
             httpWebRequest.Headers.Add( "Cache-Control", "no-cache" );
@@ -1366,6 +1446,36 @@ namespace EPIAS {
         public string meterReadingCompanyEic { get; set; } // Meter reading company EIC
         public string supplierOrganizationEic { get; set; } // Meter supplier company EIC
     }
+
+    /**
+     * list-meter-data-configuration
+     **/
+    /**
+     * request
+     **/
+    /**
+	 * GetNonobligatoryToReadMetersRequest
+	 * Wrapper Request Model for Non-obligatory To Read Meters
+	**/
+    public class GetNonobligatoryToReadMetersRequest {
+        public List<Header> header { get; set; } // Keeps request header informations.
+        public ListNonobligatoryToReadMetersRequest body { get; set; } // Non-obligatory To Read Meters Request Model
+    }
+
+    /**
+	 * ListNonobligatoryToReadMetersRequest
+	 * Non-obligatory To Read Meters Request Model
+	**/
+    public class ListNonobligatoryToReadMetersRequest {
+        public Range range { get; set; } // By using this object you can specify record number with start and end index values.
+        public DateTime term { get; set; } // Meter Term
+        public string meterEic { get; set; } // Meter EIC
+        public string listType { get; set; } //ENUM: PRE_LIST, EXACT_LIST -- Ön liste veya kesin liste durumunu belirtir. PRE_LIST:Ön Liste , EXACT_LIST = Kesin Liste
+    }
+
+    /**
+     * response
+     **/
 
     /**
      * Common classes

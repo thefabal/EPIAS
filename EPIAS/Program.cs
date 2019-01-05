@@ -11,6 +11,7 @@ namespace EPIAS {
 
         static void Main( string[ ] args ) {
             settings.Get();
+            settings.Set();
 
             if( args.Length > 0 ) {
                 if( args[ 0 ] == "get" ) {
@@ -31,22 +32,29 @@ namespace EPIAS {
             };
 
             int opt = 0;
+            string[ ] menu = {
+                "List Meters whose supplier has changed", //1
+                "List Deducted Meters Service", //2
+                "List Meter Counts", //3
+                "Meter EIC Querying Service", //4
+                "List Meter Eic List Service", //5
+                "Metering Point Listing Service", //6
+                "List New Metering Points To Be Read Service", //7
+                "List Non-obligatory To Read Metering Points Service", //8
+                "Service to control meter is read or not and Listing past meters" //9
+            };
+
             while( true ) {
                 Console.Clear();
+                for(int i = 0; i < menu.Length; i++ ) {
+                    Console.WriteLine( " " + (i+1) + ". " + menu[i] );
+                }
                 Console.WriteLine( "Please select a function..." );
-                Console.WriteLine( " 1. List Meters Whose Supplier has Changed" );
-                Console.WriteLine( " 2. List Deducted Meters Service" );
-                Console.WriteLine( " 3. List Meter Counts" );
-                Console.WriteLine( " 4. Meter EIC Querying Service" );
-                Console.WriteLine( " 5. List Meter Eic List Service" );
-                Console.WriteLine( " 6. List New Metering Points To Be Read Service" );
-                Console.WriteLine( " 7. Metering Point Listing Service" );
-                Console.WriteLine( " 8. Service to control meter is read or not and Listing past meters" );
 
                 string fn = Console.ReadLine();
                 try {
                     opt = Convert.ToInt32( fn );
-                    if( opt < 1 || opt > 7) {
+                    if( opt < 1 || opt > (menu.Length + 2) ) {
                         Console.WriteLine( "Wrong number. Please try again." );
                     }
 
@@ -70,7 +78,7 @@ namespace EPIAS {
 
                         Console.WriteLine( "Total entry : " + response.Count );
 
-                        using( StreamWriter sw = new StreamWriter( "ChangedSupplierMeter_" + DateTime.Now.ToString( "yyyyMMdd_HHmm" ) + ".txt" ) ) {
+                        using( StreamWriter sw = new StreamWriter( "GetChangedSupplierMeters_" + DateTime.Now.ToString( "yyyyMMdd_HHmm" ) + ".txt" ) ) {
                             foreach( ChangedSupplierMeterResponse item in response ) {
                                 sw.Write( item.newMeterId + "," );
                                 sw.Write( item.newMeterEic + "," );
@@ -141,14 +149,14 @@ namespace EPIAS {
                      * List Meter Counts
                      **/
                     try {
-                        List<meterCountResponseList> response = epias.GetMeterCountRequest( 
+                        List<meterCountResponseList> response = epias.GetMeterCount( 
                             new DateTime( 2018, 11, 1 ), 
                             "PORTFOLIO" 
                         );
 
                         Console.WriteLine( "Total entry : " + response.Count );
 
-                        using( StreamWriter sw = new StreamWriter( "GetMeterCountRequest_" + DateTime.Now.ToString( "yyyyMMdd_HHmm" ) + ".txt" ) ) {
+                        using( StreamWriter sw = new StreamWriter( "GetMeterCount_" + DateTime.Now.ToString( "yyyyMMdd_HHmm" ) + ".txt" ) ) {
                             foreach( meterCountResponseList item in response ) {
                                 sw.Write( item.meterEffectiveDate + "," );
                                 sw.Write( item.readingType + "," );
@@ -171,7 +179,7 @@ namespace EPIAS {
                      * Meter EIC Querying Service
                      **/
                     try {
-                        List<MeteringPointEICQueryResponseData> response = epias.MeteringPointEICQueryRequest( 
+                        List<MeteringPointEICQueryResponseData> response = epias.MeteringPointEICQuery( 
                             new List<MeteringPointEICQuery>() {
                                 new MeteringPointEICQuery() {
                                     meterEic = ""
@@ -181,7 +189,7 @@ namespace EPIAS {
 
                         Console.WriteLine( "Total entry : " + response.Count );
 
-                        using( StreamWriter sw = new StreamWriter( "MeteringPointEICQueryRequest_" + DateTime.Now.ToString( "yyyyMMdd_HHmm" ) + ".txt" ) ) {
+                        using( StreamWriter sw = new StreamWriter( "MeteringPointEICQuery_" + DateTime.Now.ToString( "yyyyMMdd_HHmm" ) + ".txt" ) ) {
                             foreach( MeteringPointEICQueryResponseData item in response ) {
                                 sw.Write( item.meterEic + "," );
                                 sw.Write( item.distributionMeterId + "," );
@@ -215,7 +223,7 @@ namespace EPIAS {
                      * List Meter Eic List Service
                      **/
                     try {
-                        List<MeterEicInfoResponse> response = epias.GetMeterEicRequest( 
+                        List<MeterEicInfoResponse> response = epias.GetMeterEic( 
                             new DateTime( 2018, 11, 1 ) 
                         );
 
@@ -241,70 +249,20 @@ namespace EPIAS {
 
                 case 6:
                     /**
-                     * List New Metering Points To Be Read Service
-                     **/
-                    try {
-                        List<ReadingMeteringPointResponse> response = epias.GetNewMeteringPointsRequest( 
-                            new ListNewMeteringPointsToBeRead() {
-                                term = new DateTime( 2018, 11, 1 ),
-                                listType = "EXACT_LIST",
-                                range = new Range() {
-                                    begin = 0,
-                                    end = 1
-                                }
-                            } 
-                        );
-
-                        using( StreamWriter sw = new StreamWriter( "ReadingMeteringPointResponse_" + DateTime.Now.ToString( "yyyyMMdd_HHmm" ) + ".txt" ) ) {
-                            foreach( ReadingMeteringPointResponse item in response ) {
-                                sw.Write( item.meterEic + "," );
-                                sw.Write( item.meterName + "," );
-                                sw.Write( item.meterId + "," );
-                                sw.Write( item.meterEffectiveDate + "," );
-                                sw.Write( item.readingType + "," );
-                                sw.Write( item.readingTypeId + "," );
-                                sw.Write( item.meterLossesType + "," );
-                                sw.Write( item.organization + "," );
-                                sw.Write( item.meterReadingOrganization + "," );
-                                sw.Write( item.profileSubscriptionGroup + "," );
-                                sw.Write( item.distributionMeterCode + "," );
-                                sw.Write( item.customerNo + "," );
-                                sw.Write( item.meterAddress + "," );
-                                sw.Write( item.countyId + "," );
-                                sw.Write( item.averageAnnualConsumption + "," );
-                                sw.Write( item.organizationEic + "," );
-                                sw.Write( item.organizationCode + "," );
-                                sw.Write( item.profileSubscriptionGroupName + "," );
-                                sw.Write( item.city );
-                                sw.WriteLine( "" );
-                            }
-                        }
-                    } catch( EXISTException ex ) {
-                        Console.WriteLine( ex.error.resultCode );
-                        Console.WriteLine( ex.error.resultDescription );
-                        Console.WriteLine( ex.error.resultType );
-                    } catch( Exception ex ) {
-                        Console.WriteLine( ex.Message );
-                    }
-
-                    break;
-
-                case 7:
-                    /**
                      * Metering Point Listing Service
                      **/
                     try {
-                        List<MeteringPointResponse> response = epias.GetMeteringPointsRequest( 
+                        List<MeteringPointResponse> response = epias.GetMeteringPoints(
                             new ListMeteringPointsRequest() {
                                 meterEIC = "",
                                 meterUsageState = "IN_USE",
                                 eligibleConsumptionType = "ELIGIBLE_CONSUMER",
                                 supplierType = "END_USE_SUPPLIER",
                                 meterEffectiveDate = new DateTime( 2018, 11, 1 )
-                            } 
+                            }
                         );
 
-                        using( StreamWriter sw = new StreamWriter( "GetMeteringPointsRequest_" + DateTime.Now.ToString( "yyyyMMdd_HHmm" ) + ".txt" ) ) {
+                        using( StreamWriter sw = new StreamWriter( "GetMeteringPoints_" + DateTime.Now.ToString( "yyyyMMdd_HHmm" ) + ".txt" ) ) {
                             foreach( MeteringPointResponse item in response ) {
                                 sw.Write( item.id + "," );
                                 sw.Write( item.meterEic + "," );
@@ -385,7 +343,107 @@ namespace EPIAS {
 
                     break;
 
+                case 7:
+                    /**
+                     * List New Metering Points To Be Read Service
+                     **/
+                    try {
+                        List<ReadingMeteringPointResponse> response = epias.GetNewMeteringPoints( 
+                            new ListNewMeteringPointsToBeRead() {
+                                term = new DateTime( 2018, 11, 1 ),
+                                listType = "EXACT_LIST",
+                                range = new Range() {
+                                    begin = 0,
+                                    end = 1
+                                }
+                            } 
+                        );
+
+                        using( StreamWriter sw = new StreamWriter( "ReadingMeteringPoint_" + DateTime.Now.ToString( "yyyyMMdd_HHmm" ) + ".txt" ) ) {
+                            foreach( ReadingMeteringPointResponse item in response ) {
+                                sw.Write( item.meterEic + "," );
+                                sw.Write( item.meterName + "," );
+                                sw.Write( item.meterId + "," );
+                                sw.Write( item.meterEffectiveDate + "," );
+                                sw.Write( item.readingType + "," );
+                                sw.Write( item.readingTypeId + "," );
+                                sw.Write( item.meterLossesType + "," );
+                                sw.Write( item.organization + "," );
+                                sw.Write( item.meterReadingOrganization + "," );
+                                sw.Write( item.profileSubscriptionGroup + "," );
+                                sw.Write( item.distributionMeterCode + "," );
+                                sw.Write( item.customerNo + "," );
+                                sw.Write( item.meterAddress + "," );
+                                sw.Write( item.countyId + "," );
+                                sw.Write( item.averageAnnualConsumption + "," );
+                                sw.Write( item.organizationEic + "," );
+                                sw.Write( item.organizationCode + "," );
+                                sw.Write( item.profileSubscriptionGroupName + "," );
+                                sw.Write( item.city );
+                                sw.WriteLine( "" );
+                            }
+                        }
+                    } catch( EXISTException ex ) {
+                        Console.WriteLine( ex.error.resultCode );
+                        Console.WriteLine( ex.error.resultDescription );
+                        Console.WriteLine( ex.error.resultType );
+                    } catch( Exception ex ) {
+                        Console.WriteLine( ex.Message );
+                    }
+
+                    break;
+
                 case 8:
+                    /**
+                     * List Non-obligatory To Read Metering Points Service
+                     **/
+                    try {
+                        List<ReadingMeteringPointResponse> response = epias.GetNonobligatoryToReadMeters(
+                            new ListNonobligatoryToReadMetersRequest() {
+                                term = new DateTime( 2018, 11, 1 ),
+                                listType = "EXACT_LIST",
+                                range = new Range() {
+                                    begin = 0,
+                                    end = 1
+                                }
+                            }
+                        );
+
+                        using( StreamWriter sw = new StreamWriter( "GetNonobligatoryToReadMeters_" + DateTime.Now.ToString( "yyyyMMdd_HHmm" ) + ".txt" ) ) {
+                            foreach( ReadingMeteringPointResponse item in response ) {
+                                sw.Write( item.meterEic + "," );
+                                sw.Write( item.meterName + "," );
+                                sw.Write( item.meterId + "," );
+                                sw.Write( item.meterEffectiveDate + "," );
+                                sw.Write( item.readingType + "," );
+                                sw.Write( item.readingTypeId + "," );
+                                sw.Write( item.meterLossesType + "," );
+                                sw.Write( item.organization + "," );
+                                sw.Write( item.meterReadingOrganization + "," );
+                                sw.Write( item.profileSubscriptionGroup + "," );
+                                sw.Write( item.distributionMeterCode + "," );
+                                sw.Write( item.customerNo + "," );
+                                sw.Write( item.meterAddress + "," );
+                                sw.Write( item.countyId + "," );
+                                sw.Write( item.averageAnnualConsumption + "," );
+                                sw.Write( item.organizationEic + "," );
+                                sw.Write( item.organizationCode + "," );
+                                sw.Write( item.profileSubscriptionGroupName + "," );
+                                sw.Write( item.city );
+                                sw.WriteLine( "" );
+                            }
+                        }
+                    } catch( EXISTException ex ) {
+                        Console.WriteLine( ex.error.resultCode );
+                        Console.WriteLine( ex.error.resultDescription );
+                        Console.WriteLine( ex.error.resultType );
+                    } catch( Exception ex ) {
+                        Console.WriteLine( ex.Message );
+                    }
+
+                    break;
+
+                case 9:
                     /**
                      * Service to control meter is read or not and Listing past meters
                      **/
